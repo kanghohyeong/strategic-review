@@ -1,11 +1,40 @@
 import fs from 'fs'
 import path from 'path'
-import matter from 'gray-matter'
 import { ReportFile, ReportGroup, ReportStatus, PaginatedGroups } from './types'
+import { getDb } from './db'
 
 const STRATEGIC_DIR = process.env.STRATEGIC_DIR || path.join(process.cwd(), '.strategic')
-const FILENAME_REGEX = /^\d{8}_\d{6}\.v\d+\.md$/
+// prefix는 YYYYMMDD_HHMMSS 또는 충돌 시 YYYYMMDD_HHMMSS_N 형태
+const FILENAME_REGEX = /^\d{8}_\d{6}(_\d+)?\.v\d+\.md$/
 const PAGE_SIZE = 10
+
+interface ReportRow {
+  id: number
+  filename: string
+  prefix: string
+  version: number
+  name: string
+  objective: string
+  constraints: string
+  status: string
+  review_comment: string | null
+  content: string
+  created_at: string
+}
+
+function rowToReportFile(row: ReportRow): ReportFile {
+  return {
+    filename: row.filename,
+    prefix: row.prefix,
+    version: row.version,
+    name: row.name,
+    objective: row.objective,
+    constraints: row.constraints,
+    status: row.status as ReportStatus,
+    reviewComment: row.review_comment ?? undefined,
+    content: row.content,
+  }
+}
 
 export function ensureStrategicDir(): void {
   fs.mkdirSync(STRATEGIC_DIR, { recursive: true })
@@ -16,7 +45,7 @@ export function isValidFilename(filename: string): boolean {
 }
 
 export function parseFilename(filename: string): { prefix: string; version: number } {
-  const match = filename.match(/^(\d{8}_\d{6})\.v(\d+)\.md$/)
+  const match = filename.match(/^(\d{8}_\d{6}(?:_\d+)?)\.v(\d+)\.md$/)
   if (!match) throw new Error(`Invalid filename: ${filename}`)
   return {
     prefix: match[1],
@@ -24,53 +53,38 @@ export function parseFilename(filename: string): { prefix: string; version: numb
   }
 }
 
-function parseReportFile(filename: string): ReportFile {
-  const filePath = path.join(STRATEGIC_DIR, filename)
-  const raw = fs.readFileSync(filePath, 'utf-8')
-  const parsed = matter(raw)
-  const { prefix, version } = parseFilename(filename)
-
-  return {
-    filename,
-    prefix,
-    version,
-    name: String(parsed.data.name ?? ''),
-    objective: String(parsed.data.objective ?? ''),
-    constraints: String(parsed.data.constraints ?? ''),
-    status: (parsed.data.status ?? 'init') as ReportStatus,
-    reviewComment: parsed.data['review-comment']
-      ? String(parsed.data['review-comment'])
-      : undefined,
-    content: parsed.content.trim(),
-  }
-}
-
 export function getPaginatedGroups(page: number): PaginatedGroups {
-  ensureStrategicDir()
+  const db = getDb()
 
-  const allFiles = fs.readdirSync(STRATEGIC_DIR).filter(isValidFilename)
+  const { total } = db
+    .prepare('SELECT COUNT(DISTINCT prefix) AS total FROM reports')
+    .get() as { total: number }
 
-  const prefixMap = new Map<string, string[]>()
-  for (const filename of allFiles) {
-    const { prefix } = parseFilename(filename)
-    if (!prefixMap.has(prefix)) prefixMap.set(prefix, [])
-    prefixMap.get(prefix)!.push(filename)
-  }
-
-  const sortedPrefixes = Array.from(prefixMap.keys()).sort((a, b) => b.localeCompare(a))
-  const totalCount = sortedPrefixes.length
+  const totalCount = total
   const totalPages = Math.max(1, Math.ceil(totalCount / PAGE_SIZE))
   const safePage = Math.min(Math.max(1, page), totalPages)
-  const startIdx = (safePage - 1) * PAGE_SIZE
-  const slicedPrefixes = sortedPrefixes.slice(startIdx, startIdx + PAGE_SIZE)
+  const offset = (safePage - 1) * PAGE_SIZE
 
-  const groups: ReportGroup[] = slicedPrefixes.map((prefix) => {
-    const filenames = prefixMap.get(prefix)!.sort((a, b) => {
-      const va = parseFilename(a).version
-      const vb = parseFilename(b).version
-      return vb - va
-    })
-    const allFilesParsed = filenames.map(parseReportFile)
+  const rows = db
+    .prepare(
+      `SELECT * FROM reports
+       WHERE prefix IN (
+         SELECT DISTINCT prefix FROM reports ORDER BY prefix DESC LIMIT ? OFFSET ?
+       )
+       ORDER BY prefix DESC, version DESC`
+    )
+    .all(PAGE_SIZE, offset) as ReportRow[]
+
+  const groupMap = new Map<string, ReportRow[]>()
+  for (const row of rows) {
+    if (!groupMap.has(row.prefix)) groupMap.set(row.prefix, [])
+    groupMap.get(row.prefix)!.push(row)
+  }
+
+  const prefixOrder = [...groupMap.keys()]
+
+  const groups: ReportGroup[] = prefixOrder.map((prefix) => {
+    const allFilesParsed = groupMap.get(prefix)!.map(rowToReportFile)
     return {
       prefix,
       latestFile: allFilesParsed[0],
@@ -83,22 +97,23 @@ export function getPaginatedGroups(page: number): PaginatedGroups {
 
 export function getReportByFilename(filename: string): ReportFile {
   if (!isValidFilename(filename)) throw new Error('Invalid filename')
-  return parseReportFile(filename)
+  const db = getDb()
+  const row = db.prepare('SELECT * FROM reports WHERE filename = ?').get(filename) as
+    | ReportRow
+    | undefined
+  if (!row) throw new Error(`Report not found: ${filename}`)
+  return rowToReportFile(row)
 }
 
 export function getGroupByPrefix(prefix: string): ReportGroup {
-  ensureStrategicDir()
+  const db = getDb()
+  const rows = db
+    .prepare('SELECT * FROM reports WHERE prefix = ? ORDER BY version DESC')
+    .all(prefix) as ReportRow[]
 
-  const allFiles = fs.readdirSync(STRATEGIC_DIR).filter(isValidFilename)
-  const filenames = allFiles
-    .filter((f) => f.startsWith(prefix))
-    .sort((a, b) => parseFilename(b).version - parseFilename(a).version)
+  if (rows.length === 0) throw new Error(`No files found for prefix: ${prefix}`)
 
-  if (filenames.length === 0) {
-    throw new Error(`No files found for prefix: ${prefix}`)
-  }
-
-  const allFilesParsed = filenames.map(parseReportFile)
+  const allFilesParsed = rows.map(rowToReportFile)
   return {
     prefix,
     latestFile: allFilesParsed[0],
@@ -111,11 +126,11 @@ export function createReport(params: {
   objective: string
   constraints: string
 }): string {
-  ensureStrategicDir()
+  const db = getDb()
 
   const now = new Date()
   const pad = (n: number, len = 2) => String(n).padStart(len, '0')
-  const prefix = [
+  const basePrefix = [
     now.getFullYear(),
     pad(now.getMonth() + 1),
     pad(now.getDate()),
@@ -125,65 +140,66 @@ export function createReport(params: {
     pad(now.getSeconds()),
   ].join('')
 
-  const filename = `${prefix}.v1.md`
-  const filePath = path.join(STRATEGIC_DIR, filename)
+  const insert = db.prepare(
+    `INSERT INTO reports (filename, prefix, version, name, objective, constraints, status, content)
+     VALUES (?, ?, 1, ?, ?, ?, 'init', '')`
+  )
 
-  const frontmatter = {
-    name: params.name,
-    objective: params.objective,
-    constraints: params.constraints,
-    status: 'init',
+  // 충돌 시 카운터 suffix로 고유 prefix 확보 (동일 초에 다수 생성 대응)
+  for (let counter = 0; counter < 1000; counter++) {
+    const prefix = counter === 0 ? basePrefix : `${basePrefix}_${counter}`
+    const filename = `${prefix}.v1.md`
+    try {
+      insert.run(filename, prefix, params.name, params.objective, params.constraints)
+      return filename
+    } catch (err: unknown) {
+      const sqliteErr = err as { code?: string }
+      if (sqliteErr.code !== 'SQLITE_CONSTRAINT_UNIQUE') throw err
+    }
   }
 
-  const fileContent = matter.stringify('', frontmatter)
-  fs.writeFileSync(filePath, fileContent, 'utf-8')
-
-  return filename
+  throw new Error('Could not create a unique report filename')
 }
 
 export function approveReport(filename: string, comment?: string): void {
   if (!isValidFilename(filename)) throw new Error('Invalid filename')
-
-  const filePath = path.join(STRATEGIC_DIR, filename)
-  const raw = fs.readFileSync(filePath, 'utf-8')
-  const parsed = matter(raw)
-
-  parsed.data.status = 'approve'
-  if (comment) {
-    parsed.data['review-comment'] = comment
-  } else {
-    delete parsed.data['review-comment']
-  }
-
-  const updated = matter.stringify(parsed.content, parsed.data)
-  fs.writeFileSync(filePath, updated, 'utf-8')
+  const db = getDb()
+  const result = db
+    .prepare(
+      `UPDATE reports SET status = 'approve', review_comment = ? WHERE filename = ?`
+    )
+    .run(comment ?? null, filename)
+  if (result.changes === 0) throw new Error(`Report not found: ${filename}`)
 }
 
 export function rejectReport(filename: string, comment: string): string {
   if (!isValidFilename(filename)) throw new Error('Invalid filename')
+  const db = getDb()
 
-  const filePath = path.join(STRATEGIC_DIR, filename)
-  const raw = fs.readFileSync(filePath, 'utf-8')
-  const parsed = matter(raw)
+  let newFilename = ''
 
-  parsed.data.status = 'reject'
-  parsed.data['review-comment'] = comment
+  const transaction = db.transaction(() => {
+    const updateResult = db
+      .prepare(
+        `UPDATE reports SET status = 'reject', review_comment = ? WHERE filename = ?`
+      )
+      .run(comment, filename)
 
-  const updated = matter.stringify(parsed.content, parsed.data)
-  fs.writeFileSync(filePath, updated, 'utf-8')
+    if (updateResult.changes === 0) throw new Error(`Report not found: ${filename}`)
 
-  const { prefix, version } = parseFilename(filename)
-  const newFilename = `${prefix}.v${version + 1}.md`
-  const newFilePath = path.join(STRATEGIC_DIR, newFilename)
+    const row = db
+      .prepare('SELECT * FROM reports WHERE filename = ?')
+      .get(filename) as ReportRow
 
-  const newFrontmatter = {
-    name: String(parsed.data.name ?? ''),
-    objective: String(parsed.data.objective ?? ''),
-    constraints: String(parsed.data.constraints ?? ''),
-    status: 'revision' as ReportStatus,
-  }
-  fs.writeFileSync(newFilePath, matter.stringify('', newFrontmatter), 'utf-8')
+    newFilename = `${row.prefix}.v${row.version + 1}.md`
 
+    db.prepare(
+      `INSERT INTO reports (filename, prefix, version, name, objective, constraints, status, content)
+       VALUES (?, ?, ?, ?, ?, ?, 'revision', '')`
+    ).run(newFilename, row.prefix, row.version + 1, row.name, row.objective, row.constraints)
+  })
+
+  transaction()
   return newFilename
 }
 
