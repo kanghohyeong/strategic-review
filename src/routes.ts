@@ -7,7 +7,9 @@ import {
   createReport,
   approveReport,
   rejectReport,
+  submitReport,
   getStrategicRelDir,
+  isValidFilename,
 } from './reportService'
 
 export const router = Router()
@@ -104,6 +106,51 @@ router.post('/reports/:filename/approve', async (req: Request, res: Response) =>
     handleError(res, err)
   }
 })
+
+// ─── REST API ────────────────────────────────────────────────────────────────
+
+// GET /api/reports/:filename — 보고서 단건 조회 (JSON)
+router.get('/api/reports/:filename', (req: Request, res: Response) => {
+  const { filename } = req.params
+  if (!isValidFilename(filename)) {
+    res.status(400).json({ error: 'Invalid filename' })
+    return
+  }
+  try {
+    res.json(getReportByFilename(filename))
+  } catch {
+    res.status(404).json({ error: 'Report not found' })
+  }
+})
+
+// GET /api/groups/:prefix — prefix로 전체 버전 그룹 조회 (JSON)
+router.get('/api/groups/:prefix', (req: Request, res: Response) => {
+  try {
+    res.json(getGroupByPrefix(req.params.prefix))
+  } catch {
+    res.status(404).json({ error: 'Group not found' })
+  }
+})
+
+// PATCH /api/reports/:filename — 보고서 content/status 업데이트 (JSON)
+router.patch('/api/reports/:filename', (req: Request, res: Response) => {
+  const { filename } = req.params
+  if (!isValidFilename(filename)) {
+    res.status(400).json({ error: 'Invalid filename' })
+    return
+  }
+  const { content, status } = req.body as { content?: string; status?: string }
+  try {
+    if (status === 'submit' && content !== undefined) {
+      submitReport(filename, content)
+    }
+    res.json(getReportByFilename(filename))
+  } catch {
+    res.status(404).json({ error: 'Report not found' })
+  }
+})
+
+// ─────────────────────────────────────────────────────────────────────────────
 
 // POST /reports/:filename/reject — 반려
 router.post('/reports/:filename/reject', async (req: Request, res: Response) => {

@@ -4,7 +4,7 @@
 
 ### Step 1: Confirm Goals and Constraints
 
-* Confirm the goals and constraints specified in the initial document.
+* From the API response retrieved in SKILL Step 1, check the `objective` and `constraints` fields.
 * If goals and constraints do not exist, return an error message to the user.
 
 ### Step 2: Write Report
@@ -13,5 +13,12 @@
 
 ### Step 3: Save Report
 
-* Attach the report content to the initial document and save it.
-* Update the frontmatter status to 'submit'.
+* Call the following API to save the report content and change the status to `submit`:
+
+  ```bash
+  curl -s -X PATCH "${BASE_URL}/api/reports/{filename}" \
+    -H "Content-Type: application/json" \
+    -d '{"content": "{report body (JSON escaped)}", "status": "submit"}'
+  ```
+
+* The API response returns the updated report JSON.

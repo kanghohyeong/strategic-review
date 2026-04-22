@@ -6,18 +6,30 @@ disable-model-invocation: true
 
 # Strategic Review Interactive Skill
 
+## Prerequisites
+
+Confirm the web server URL. The default is `http://localhost:3000` and can be changed via the `STRATEGIC_WEBUI_URL` environment variable.
+
+```bash
+BASE_URL="${STRATEGIC_WEBUI_URL:-http://localhost:3000}"
+```
+
 ## Instructions
 
 ### Step 1: Retrieve Report
 
 * Ask the user to enter the filename of the strategic report.
-* If the report does not exist, return an error message to the user.
-* Verify that the report is saved in markdown format. If not, return an error message to the user.
+* Call the following API to retrieve the report:
+
+  ```bash
+  curl -s "${BASE_URL}/api/reports/{filename}"
+  ```
+
+* If the response is an error (`404`, `400`), return an error message to the user.
 
 ### Step 2: Check Status
 
-* Check the status of the report included in the frontmatter of the markdown file.
-
+* Check the `status` field in the API response JSON.
 
 ### Step 3: Act Based on Report Status
 

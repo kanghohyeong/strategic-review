@@ -6,6 +6,7 @@ import {
   rejectReport,
   getPaginatedGroups,
   getGroupByPrefix,
+  submitReport,
 } from '../reportService'
 
 beforeEach(() => {
@@ -132,6 +133,24 @@ describe('getPaginatedGroups', () => {
     expect(page2.groups).toHaveLength(1)
     expect(page1.totalPages).toBe(2)
     expect(page1.totalCount).toBe(11)
+  })
+})
+
+describe('submitReport', () => {
+  it('content를 저장하고 status를 submit으로 변경한다', () => {
+    const filename = createReport({ name: '전략', objective: '목표', constraints: '제약' })
+    submitReport(filename, '# 보고서 본문')
+    const report = getReportByFilename(filename)
+    expect(report.content).toBe('# 보고서 본문')
+    expect(report.status).toBe('submit')
+  })
+
+  it('존재하지 않는 filename이면 에러를 던진다', () => {
+    expect(() => submitReport('99991231_235959.v1.md', '내용')).toThrow()
+  })
+
+  it('형식이 잘못된 filename이면 에러를 던진다', () => {
+    expect(() => submitReport('invalid.md', '내용')).toThrow('Invalid filename')
   })
 })
 

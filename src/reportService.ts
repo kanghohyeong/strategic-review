@@ -203,6 +203,15 @@ export function rejectReport(filename: string, comment: string): string {
   return newFilename
 }
 
+export function submitReport(filename: string, content: string): void {
+  if (!isValidFilename(filename)) throw new Error('Invalid filename')
+  const db = getDb()
+  const result = db
+    .prepare(`UPDATE reports SET content = ?, status = 'submit' WHERE filename = ?`)
+    .run(content, filename)
+  if (result.changes === 0) throw new Error(`Report not found: ${filename}`)
+}
+
 export function getStrategicRelDir(): string {
   const rel = path.relative(process.cwd(), STRATEGIC_DIR)
   return rel.startsWith('..') ? STRATEGIC_DIR : rel
