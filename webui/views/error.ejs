@@ -1,0 +1,9 @@
+<%- include('layouts/head', { title: 'Error ' + code }) %>
+
+    <div class="error-page">
+      <h2>Error <%= code %></h2>
+      <p><%= message %></p>
+      <a href="/" class="btn btn-primary">Back to List</a>
+    </div>
+
+<%- include('layouts/foot') %>

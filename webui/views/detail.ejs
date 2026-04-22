@@ -1,0 +1,139 @@
+<%- include('layouts/head', { title: file.name || 'Report Detail' }) %>
+
+    <div class="detail-header">
+      <h2 class="detail-header-title"><%= file.name || '(Unnamed)' %></h2>
+      <div class="detail-header-meta">
+        <div class="detail-header-meta-item">
+          <span class="detail-header-meta-label">Objective</span>
+          <span class="detail-header-meta-value"><%= file.objective %></span>
+        </div>
+        <% if (file.constraints) { %>
+        <div class="detail-header-meta-item">
+          <span class="detail-header-meta-label">Constraints</span>
+          <span class="detail-header-meta-value"><%= file.constraints %></span>
+        </div>
+        <% } %>
+        <div class="detail-header-meta-secondary">
+          <span class="detail-header-meta-label">File</span>
+          <code><%= file.filename %></code>
+        </div>
+      </div>
+
+      <% if (file.reviewComment) { %>
+      <div class="detail-inner-section">
+        <div class="comment-box"><strong>Review Comment:</strong> <%= file.reviewComment %></div>
+      </div>
+      <% } %>
+
+      <% if (file.status === 'init' || file.status === 'revision') { %>
+      <div class="detail-inner-section">
+        <div class="command-guide">
+          <p class="command-guide-text">
+            <% if (file.status === 'init') { %>
+            To request a strategy review from the agent, enter the command below
+            <% } else { %>
+            To request a strategy revision from the agent, enter the command below
+            <% } %>
+          </p>
+          <div class="command-snippet">
+            <code id="cmd-text">/strategic-review-interactive <%= strategicDir %>/<%= file.filename %></code>
+            <button class="btn-copy" onclick="copyCommand()">Copy</button>
+          </div>
+        </div>
+      </div>
+      <% } %>
+
+      <div class="detail-inner-section">
+        <div class="version-section-label">Version History</div>
+        <div class="version-nav">
+          <% for (const f of group.allFiles) { %>
+            <a href="/reports/<%= f.filename %>" class="version-chip <%= f.filename === file.filename ? 'active' : '' %>">v<%= f.version %> <%- include('partials/badge', { status: f.status }) %></a>
+          <% } %>
+        </div>
+      </div>
+    </div>
+
+    <div class="markdown-body"><%- renderedContent %></div>
+
+    <% if (file.status === 'submit') { %>
+    <div class="review-bar" id="review-bar">
+      <div class="review-bar-inner">
+        <h3>Review</h3>
+        <div class="review-actions">
+          <button type="button" class="btn btn-success" onclick="openReview('approve')">Approve</button>
+          <button type="button" class="btn btn-danger" onclick="openReview('reject')">Reject</button>
+        </div>
+      </div>
+      <div class="review-expand" id="review-expand">
+        <form id="review-form" method="POST" action="">
+          <textarea id="review-comment" name="comment" required rows="5"
+            placeholder="Write your review&#10;&#10;Examples:&#10;- Request an alternative strategic option analysis&#10;- Request detailed analysis of the Risk Assessment section&#10;- Request elaboration on the Implementation roadmap&#10;- Adopt Strategic Option A: [brief rationale]&#10;- Reject — insufficient justification in Decision Logic&#10;- Approve with condition: revise Success Criteria metrics"></textarea>
+          <div class="review-expand-actions">
+            <button type="button" class="btn btn-secondary" onclick="closeReview()">Cancel</button>
+            <button type="submit" id="review-submit-btn" class="btn btn-success">Confirm</button>
+          </div>
+        </form>
+      </div>
+    </div>
+    <script>document.body.classList.add('body-has-review-bar');</script>
+    <% } %>
+
+    <script>
+    function copyCommand() {
+      const text = document.getElementById('cmd-text').textContent;
+      navigator.clipboard.writeText(text).then(function() {
+        const btn = document.querySelector('.btn-copy');
+        const original = btn.textContent;
+        btn.textContent = 'Copied!';
+        setTimeout(function() { btn.textContent = original; }, 2000);
+      });
+    }
+
+    var pendingAction = null;
+    var approveUrl = '<%= "/reports/" + file.filename + "/approve" %>';
+    var rejectUrl  = '<%= "/reports/" + file.filename + "/reject" %>';
+
+    function openReview(action) {
+      pendingAction = action;
+      var form = document.getElementById('review-form');
+      var submitBtn = document.getElementById('review-submit-btn');
+      if (action === 'approve') {
+        form.action = approveUrl;
+        submitBtn.textContent = 'Confirm Approve';
+        submitBtn.className = 'btn btn-success';
+      } else {
+        form.action = rejectUrl;
+        submitBtn.textContent = 'Confirm Reject';
+        submitBtn.className = 'btn btn-danger';
+      }
+      document.getElementById('review-bar').classList.add('expanded');
+      document.body.classList.add('review-expanded');
+      document.getElementById('review-comment').focus();
+    }
+
+    function closeReview() {
+      document.getElementById('review-bar').classList.remove('expanded');
+      document.body.classList.remove('review-expanded');
+      document.getElementById('review-comment').value = '';
+      pendingAction = null;
+    }
+
+    document.addEventListener('DOMContentLoaded', function() {
+      var form = document.getElementById('review-form');
+      if (form) {
+        form.addEventListener('submit', function(e) {
+          var comment = document.getElementById('review-comment').value.trim();
+          if (!comment) {
+            e.preventDefault();
+            document.getElementById('review-comment').focus();
+          }
+        });
+      }
+
+      document.addEventListener('keydown', function(e) {
+        if (e.key === 'Escape') closeReview();
+      });
+    });
+    </script>
+
+<%- include('layouts/foot') %>

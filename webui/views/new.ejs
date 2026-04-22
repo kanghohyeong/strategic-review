@@ -1,0 +1,33 @@
+<%- include('layouts/head', { title: 'New Report' }) %>
+
+    <div class="page-header">
+      <h2>New Report</h2>
+      <a href="/" class="btn btn-secondary">Back to List</a>
+    </div>
+
+    <% if (error) { %>
+    <div class="alert alert-error"><%= error %></div>
+    <% } %>
+
+    <div class="card">
+      <form method="POST" action="/reports">
+        <div class="form-group">
+          <label for="name">Report Name *</label>
+          <input type="text" id="name" name="name" required placeholder="e.g. Q1 Marketing Strategy Review">
+        </div>
+        <div class="form-group">
+          <label for="objective">Objective *</label>
+          <textarea id="objective" name="objective" required placeholder="Enter the objective of this report"></textarea>
+        </div>
+        <div class="form-group">
+          <label for="constraints">Constraints</label>
+          <textarea id="constraints" name="constraints" placeholder="Enter any constraints if applicable"></textarea>
+        </div>
+        <div style="display:flex;gap:12px;">
+          <button type="submit" class="btn btn-primary">Create Report</button>
+          <a href="/" class="btn btn-secondary">Cancel</a>
+        </div>
+      </form>
+    </div>
+
+<%- include('layouts/foot') %>

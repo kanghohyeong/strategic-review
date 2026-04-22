@@ -1,0 +1,5 @@
+.claude
+webui/node_modules/
+webui/dist/
+.strategic/
+.serena/

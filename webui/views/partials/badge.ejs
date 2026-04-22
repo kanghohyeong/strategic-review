@@ -1,0 +1,4 @@
+<%
+  const STATUS_LABEL = { init: 'Draft', submit: 'In Review', approve: 'Approved', reject: 'Rejected', revision: 'Revision' }
+  const STATUS_CLASS = { init: 'badge-init', submit: 'badge-submit', approve: 'badge-approve', reject: 'badge-reject', revision: 'badge-revision' }
+%><span class="badge <%= STATUS_CLASS[status] %>"><%= STATUS_LABEL[status] %></span>

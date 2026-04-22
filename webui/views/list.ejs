@@ -1,0 +1,46 @@
+<%- include('layouts/head', { title: 'Reports' }) %>
+
+    <div class="page-header">
+      <h2>Reports <small style="font-size:0.8em;color:var(--neutral-400);">(Total: <%= totalCount %>)</small></h2>
+      <a href="/reports/new" class="btn btn-primary">New Report</a>
+    </div>
+
+    <% if (groups.length === 0) { %>
+    <div class="empty-state">
+      <p>No reports found.</p>
+      <a href="/reports/new" class="btn btn-primary">Create First Report</a>
+    </div>
+    <% } else { %>
+    <div class="report-list">
+      <% for (const group of groups) { %>
+        <% const f = group.latestFile %>
+        <% const versionCount = group.allFiles.length %>
+        <div class="report-row status-<%= f.status %>">
+          <div class="report-row-main">
+            <a href="/reports/<%= f.filename %>" class="report-name"><%= f.name || '(Unnamed)' %></a>
+            <span class="report-objective"><%= f.objective.slice(0, 100) %><%= f.objective.length > 100 ? '...' : '' %></span>
+          </div>
+          <div class="report-row-meta">
+            <span class="report-version">v<%= f.version %> · <%= versionCount %>개 버전</span>
+            <%- include('partials/badge', { status: f.status }) %>
+          </div>
+        </div>
+      <% } %>
+    </div>
+    <% } %>
+
+    <% if (totalPages > 1) { %>
+    <div class="pagination">
+      <% if (currentPage > 1) { %><a href="/?page=<%= currentPage - 1 %>">Previous</a><% } %>
+      <% for (let i = 1; i <= totalPages; i++) { %>
+        <% if (i === currentPage) { %>
+          <span class="active"><%= i %></span>
+        <% } else { %>
+          <a href="/?page=<%= i %>"><%= i %></a>
+        <% } %>
+      <% } %>
+      <% if (currentPage < totalPages) { %><a href="/?page=<%= currentPage + 1 %>">Next</a><% } %>
+    </div>
+    <% } %>
+
+<%- include('layouts/foot') %>
