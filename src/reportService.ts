@@ -13,16 +13,19 @@ interface ReportRow {
   filename: string
   prefix: string
   version: number
-  name: string
-  objective: string
-  constraints: string
   status: string
   review_comment: string | null
   content: string
   created_at: string
 }
 
-function rowToReportFile(row: ReportRow): ReportFile {
+interface ReportRowWithGroup extends ReportRow {
+  name: string
+  objective: string
+  constraints: string
+}
+
+function rowToReportFile(row: ReportRowWithGroup): ReportFile {
   return {
     filename: row.filename,
     prefix: row.prefix,
@@ -57,7 +60,7 @@ export function getPaginatedGroups(page: number): PaginatedGroups {
   const db = getDb()
 
   const { total } = db
-    .prepare('SELECT COUNT(DISTINCT prefix) AS total FROM reports')
+    .prepare('SELECT COUNT(*) AS total FROM report_groups')
     .get() as { total: number }
 
   const totalCount = total
@@ -65,26 +68,34 @@ export function getPaginatedGroups(page: number): PaginatedGroups {
   const safePage = Math.min(Math.max(1, page), totalPages)
   const offset = (safePage - 1) * PAGE_SIZE
 
+  const prefixRows = db
+    .prepare('SELECT prefix FROM report_groups ORDER BY prefix DESC LIMIT ? OFFSET ?')
+    .all(PAGE_SIZE, offset) as { prefix: string }[]
+
+  const prefixes = prefixRows.map((r) => r.prefix)
+
+  if (prefixes.length === 0) {
+    return { groups: [], currentPage: safePage, totalPages, totalCount }
+  }
+
+  const placeholders = prefixes.map(() => '?').join(',')
   const rows = db
     .prepare(
-      `SELECT * FROM reports
-       WHERE prefix IN (
-         SELECT DISTINCT prefix FROM reports ORDER BY prefix DESC LIMIT ? OFFSET ?
-       )
-       ORDER BY prefix DESC, version DESC`
+      `SELECT r.*, g.name, g.objective, g.constraints
+       FROM reports r JOIN report_groups g USING (prefix)
+       WHERE r.prefix IN (${placeholders})
+       ORDER BY r.prefix DESC, r.version DESC`
     )
-    .all(PAGE_SIZE, offset) as ReportRow[]
+    .all(...prefixes) as ReportRowWithGroup[]
 
-  const groupMap = new Map<string, ReportRow[]>()
+  const groupMap = new Map<string, ReportRowWithGroup[]>()
   for (const row of rows) {
     if (!groupMap.has(row.prefix)) groupMap.set(row.prefix, [])
     groupMap.get(row.prefix)!.push(row)
   }
 
-  const prefixOrder = [...groupMap.keys()]
-
-  const groups: ReportGroup[] = prefixOrder.map((prefix) => {
-    const allFilesParsed = groupMap.get(prefix)!.map(rowToReportFile)
+  const groups: ReportGroup[] = prefixes.map((prefix) => {
+    const allFilesParsed = (groupMap.get(prefix) ?? []).map(rowToReportFile)
     return {
       prefix,
       latestFile: allFilesParsed[0],
@@ -98,9 +109,13 @@ export function getPaginatedGroups(page: number): PaginatedGroups {
 export function getReportByFilename(filename: string): ReportFile {
   if (!isValidFilename(filename)) throw new Error('Invalid filename')
   const db = getDb()
-  const row = db.prepare('SELECT * FROM reports WHERE filename = ?').get(filename) as
-    | ReportRow
-    | undefined
+  const row = db
+    .prepare(
+      `SELECT r.*, g.name, g.objective, g.constraints
+       FROM reports r JOIN report_groups g USING (prefix)
+       WHERE r.filename = ?`
+    )
+    .get(filename) as ReportRowWithGroup | undefined
   if (!row) throw new Error(`Report not found: ${filename}`)
   return rowToReportFile(row)
 }
@@ -108,8 +123,12 @@ export function getReportByFilename(filename: string): ReportFile {
 export function getGroupByPrefix(prefix: string): ReportGroup {
   const db = getDb()
   const rows = db
-    .prepare('SELECT * FROM reports WHERE prefix = ? ORDER BY version DESC')
-    .all(prefix) as ReportRow[]
+    .prepare(
+      `SELECT r.*, g.name, g.objective, g.constraints
+       FROM reports r JOIN report_groups g USING (prefix)
+       WHERE r.prefix = ? ORDER BY r.version DESC`
+    )
+    .all(prefix) as ReportRowWithGroup[]
 
   if (rows.length === 0) throw new Error(`No files found for prefix: ${prefix}`)
 
@@ -140,17 +159,23 @@ export function createReport(params: {
     pad(now.getSeconds()),
   ].join('')
 
-  const insert = db.prepare(
-    `INSERT INTO reports (filename, prefix, version, name, objective, constraints, status, content)
-     VALUES (?, ?, 1, ?, ?, ?, 'init', '')`
+  const insertGroup = db.prepare(
+    `INSERT OR IGNORE INTO report_groups (prefix, name, objective, constraints)
+     VALUES (?, ?, ?, ?)`
+  )
+  const insertReport = db.prepare(
+    `INSERT INTO reports (filename, prefix, version, status, content)
+     VALUES (?, ?, 1, 'init', '')`
   )
 
-  // 충돌 시 카운터 suffix로 고유 prefix 확보 (동일 초에 다수 생성 대응)
   for (let counter = 0; counter < 1000; counter++) {
     const prefix = counter === 0 ? basePrefix : `${basePrefix}_${counter}`
     const filename = `${prefix}.v1.md`
     try {
-      insert.run(filename, prefix, params.name, params.objective, params.constraints)
+      db.transaction(() => {
+        insertGroup.run(prefix, params.name, params.objective, params.constraints)
+        insertReport.run(filename, prefix)
+      })()
       return filename
     } catch (err: unknown) {
       const sqliteErr = err as { code?: string }
@@ -194,9 +219,9 @@ export function rejectReport(filename: string, comment: string): string {
     newFilename = `${row.prefix}.v${row.version + 1}.md`
 
     db.prepare(
-      `INSERT INTO reports (filename, prefix, version, name, objective, constraints, status, content)
-       VALUES (?, ?, ?, ?, ?, ?, 'revision', '')`
-    ).run(newFilename, row.prefix, row.version + 1, row.name, row.objective, row.constraints)
+      `INSERT INTO reports (filename, prefix, version, status, content)
+       VALUES (?, ?, ?, 'revision', '')`
+    ).run(newFilename, row.prefix, row.version + 1)
   })
 
   transaction()
