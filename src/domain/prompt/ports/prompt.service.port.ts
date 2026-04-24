@@ -1,5 +1,5 @@
-import { ReportFile } from '../../../types'
+import { ReportFile, ReportGroup } from '../../../types'
 
 export interface PromptServicePort {
-  getAgentPrompt(file: ReportFile, baseUrl: string): string
+  getAgentPrompt(file: ReportFile, group: ReportGroup, baseUrl: string): string
 }

@@ -130,11 +130,17 @@ input[type=text]:focus, textarea:focus { outline: none; border-color: var(--prim
 .empty-state p { margin-bottom: var(--sp-4); }
 
 .command-guide { background: var(--primary-50); border: 1px solid var(--command-border); border-radius: var(--radius-lg); padding: var(--sp-4) 20px; margin-bottom: 20px; }
-.command-guide-text { font-size: var(--text-sm); color: var(--neutral-700); margin-bottom: 10px; }
-.command-snippet { display: flex; align-items: center; gap: 10px; background: var(--surface-dark); border-radius: var(--radius-md); padding: 10px 14px; }
-.command-snippet code { flex: 1; color: var(--surface-dark-link); font-family: 'Courier New', monospace; font-size: var(--text-sm); }
+.command-guide-header { display: flex; align-items: flex-start; justify-content: space-between; gap: 10px; }
+.command-guide-actions { display: flex; gap: 8px; align-items: center; flex-shrink: 0; }
+.command-guide-text { font-size: var(--text-sm); color: var(--neutral-700); margin: 0; }
+.command-snippet { display: none; align-items: center; gap: 10px; background: var(--surface-dark); border-radius: var(--radius-md); padding: 10px 14px; margin-top: 10px; }
+.command-guide.expanded .command-snippet { display: flex; }
+.command-snippet code { flex: 1; min-width: 0; color: var(--surface-dark-link); font-family: 'Courier New', monospace; font-size: var(--text-sm); word-break: break-all; overflow-wrap: break-word; }
+.command-snippet pre { flex: 1; min-width: 0; color: var(--surface-dark-link); font-family: 'Courier New', monospace; font-size: var(--text-sm); white-space: pre-wrap; word-break: break-word; overflow-wrap: break-word; }
 .btn-copy { background: var(--surface-dark-btn); color: var(--surface-dark-link); border: 1px solid var(--surface-dark-btn-border); border-radius: var(--radius-sm); padding: var(--sp-1) var(--sp-3); font-size: var(--text-xs); cursor: pointer; white-space: nowrap; }
 .btn-copy:hover { background: var(--surface-dark-btn-hover); }
+.btn-expand { background: var(--surface-dark-btn); color: var(--surface-dark-link); border: 1px solid var(--surface-dark-btn-border); border-radius: var(--radius-sm); padding: var(--sp-1) var(--sp-3); font-size: var(--text-xs); cursor: pointer; white-space: nowrap; }
+.btn-expand:hover { background: var(--surface-dark-btn-hover); }
 
 .review-bar { position: fixed; bottom: 0; left: 0; right: 0; background: #fff; border-top: 2px solid var(--neutral-200); box-shadow: 0 -2px 12px rgba(0,0,0,0.08); z-index: 100; max-height: 72px; overflow: hidden; transition: max-height 0.35s ease; }
 .review-bar.expanded { max-height: 320px; }

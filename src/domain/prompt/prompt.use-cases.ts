@@ -1,4 +1,4 @@
-import { ReportFile } from '../../types'
+import { ReportFile, ReportGroup } from '../../types'
 import { PromptServicePort } from './ports/prompt.service.port'
 
 const REPORT_SECTIONS_GUIDE = `보고서는 아래 8개 섹션을 반드시 포함해야 합니다.
@@ -15,7 +15,7 @@ const REPORT_SECTIONS_GUIDE = `보고서는 아래 8개 섹션을 반드시 포�
 | **8. Expected Effects & KPIs** | Performance Measurement & Definition of Done | Set objective data and quantitative indicators to prove the success of the decided plan. |`
 
 export class PromptUseCases implements PromptServicePort {
-  getAgentPrompt(file: ReportFile, baseUrl: string): string {
+  getAgentPrompt(file: ReportFile, group: ReportGroup, baseUrl: string): string {
     const patchCmd = `PATCH ${baseUrl}/api/reports/${file.filename}\nContent-Type: text/markdown\nBody: (작성한 보고서 전문)`
 
     if (file.status === 'init') {
@@ -31,12 +31,25 @@ export class PromptUseCases implements PromptServicePort {
     }
 
     if (file.status === 'revision') {
+      const reviewHistories = group.allFiles
+        .filter(f => f.status === 'reject' && f.reviewComment)
+        .reverse()
+        .map(f => `[v${f.version} 검토 의견]\n${f.reviewComment}`)
+        .join('\n\n')
+
+      const lastRejectedContent = group.allFiles.find(f => f.status === 'reject')?.content ?? ''
+
       return [
         '아래 리뷰 코멘트를 반영하여 전략 검토 보고서를 수정하고,',
         '수정이 완료되면 다음 API로 저장하세요.',
         '',
         `목표: ${file.objective}`,
-        `리뷰 코멘트: ${file.reviewComment ?? ''}`,
+        '',
+        '=== 지난 버전 검토 의견 ===',
+        reviewHistories,
+        '',
+        '=== 수정 대상 보고서 (마지막 제출 버전) ===',
+        lastRejectedContent,
         '',
         REPORT_SECTIONS_GUIDE,
         '',

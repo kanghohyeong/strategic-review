@@ -27,17 +27,22 @@
 
       <% if (agentPrompt) { %>
       <div class="detail-inner-section">
-        <div class="command-guide">
-          <p class="command-guide-text">
-            <% if (file.status === 'init') { %>
-            To request a strategy review from the agent, copy the prompt below
-            <% } else { %>
-            To request a strategy revision from the agent, copy the prompt below
-            <% } %>
-          </p>
+        <div class="command-guide" id="command-guide">
+          <div class="command-guide-header">
+            <p class="command-guide-text">
+              <% if (file.status === 'init') { %>
+              To request a strategy review from the agent, copy the prompt below
+              <% } else { %>
+              To request a strategy revision from the agent, copy the prompt below
+              <% } %>
+            </p>
+            <div class="command-guide-actions">
+              <button class="btn-copy" onclick="copyCommand()">Copy</button>
+              <button class="btn-expand" id="prompt-toggle" onclick="togglePrompt()">펼치기</button>
+            </div>
+          </div>
           <div class="command-snippet">
             <pre id="cmd-text"><%= agentPrompt %></pre>
-            <button class="btn-copy" onclick="copyCommand()">Copy</button>
           </div>
         </div>
       </div>
@@ -79,6 +84,13 @@
     <% } %>
 
     <script>
+    function togglePrompt() {
+      var guide = document.getElementById('command-guide');
+      var btn = document.getElementById('prompt-toggle');
+      guide.classList.toggle('expanded');
+      btn.textContent = guide.classList.contains('expanded') ? '접기' : '펼치기';
+    }
+
     function copyCommand() {
       const text = document.getElementById('cmd-text').textContent;
       navigator.clipboard.writeText(text).then(function() {
