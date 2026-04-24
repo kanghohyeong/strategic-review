@@ -132,18 +132,16 @@ router.get('/api/groups/:prefix', (req: Request, res: Response) => {
   }
 })
 
-// PATCH /api/reports/:filename — 보고서 content/status 업데이트 (JSON)
+// PATCH /api/reports/:filename — 보고서 content 업데이트 및 submit 상태로 변경 (Markdown)
 router.patch('/api/reports/:filename', (req: Request, res: Response) => {
   const { filename } = req.params
   if (!isValidFilename(filename)) {
     res.status(400).json({ error: 'Invalid filename' })
     return
   }
-  const { content, status } = req.body as { content?: string; status?: string }
+  const content = typeof req.body === 'string' ? req.body : ''
   try {
-    if (status === 'submit' && content !== undefined) {
-      submitReport(filename, content)
-    }
+    submitReport(filename, content)
     res.json(getReportByFilename(filename))
   } catch {
     res.status(404).json({ error: 'Report not found' })

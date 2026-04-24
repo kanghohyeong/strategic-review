@@ -11,6 +11,7 @@ app.set('views', path.join(__dirname, '..', 'views'))
 
 app.use(express.urlencoded({ extended: false }))
 app.use(express.json())
+app.use(express.text({ type: ['text/plain', 'text/markdown'] }))
 app.use(express.static(path.join(__dirname, '..', 'public')))
 app.use('/', router)
 

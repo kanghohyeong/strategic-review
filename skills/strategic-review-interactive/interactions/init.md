@@ -17,8 +17,8 @@
 
   ```bash
   curl -s -X PATCH "${BASE_URL}/api/reports/{filename}" \
-    -H "Content-Type: application/json" \
-    -d '{"content": "{report body (JSON escaped)}", "status": "submit"}'
+    -H "Content-Type: text/markdown" \
+    --data-binary "{report body}"
   ```
 
 * The API response returns the updated report JSON.

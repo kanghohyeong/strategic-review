@@ -7,6 +7,7 @@ import { createReport, rejectReport } from '../reportService'
 const app = express()
 app.use(express.json())
 app.use(express.urlencoded({ extended: false }))
+app.use(express.text({ type: ['text/plain', 'text/markdown'] }))
 app.use('/', router)
 
 beforeEach(() => {
@@ -65,7 +66,8 @@ describe('PATCH /api/reports/:filename', () => {
     const filename = createReport({ name: '전략', objective: '목표', constraints: '제약' })
     const res = await request(app)
       .patch(`/api/reports/${filename}`)
-      .send({ content: '# 보고서 본문', status: 'submit' })
+      .type('text/markdown')
+      .send('# 보고서 본문')
     expect(res.status).toBe(200)
     expect(res.body.content).toBe('# 보고서 본문')
     expect(res.body.status).toBe('submit')
@@ -74,14 +76,16 @@ describe('PATCH /api/reports/:filename', () => {
   it('존재하지 않는 filename이면 404를 반환한다', async () => {
     const res = await request(app)
       .patch('/api/reports/99991231_235959.v1.md')
-      .send({ content: '내용', status: 'submit' })
+      .type('text/markdown')
+      .send('내용')
     expect(res.status).toBe(404)
   })
 
   it('형식이 잘못된 filename이면 400을 반환한다', async () => {
     const res = await request(app)
       .patch('/api/reports/invalid.md')
-      .send({ content: '내용', status: 'submit' })
+      .type('text/markdown')
+      .send('내용')
     expect(res.status).toBe(400)
   })
 })

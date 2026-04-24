@@ -17,8 +17,8 @@
 
   ```bash
   curl -s -X PATCH "${BASE_URL}/api/reports/{파일명}" \
-    -H "Content-Type: application/json" \
-    -d '{"content": "{보고서 본문 (JSON 이스케이프 처리)}", "status": "submit"}'
+    -H "Content-Type: text/markdown" \
+    --data-binary "{보고서 본문}"
   ```
 
 * API 응답으로 업데이트된 보고서 JSON이 반환됩니다.
