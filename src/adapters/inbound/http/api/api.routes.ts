@@ -1,10 +1,10 @@
 import { Router } from 'express'
-import { ReportServicePort } from '../../../../domain/ports/report.service.port'
+import { ReportServicePort } from '../../../../domain/report/ports/report.service.port'
 import { ApiController } from './api.controller'
 
-export function createApiRouter(service: ReportServicePort): Router {
+export function createApiRouter(reportService: ReportServicePort): Router {
   const router = Router()
-  const ctrl = new ApiController(service)
+  const ctrl = new ApiController(reportService)
 
   router.get('/api/reports/:filename', ctrl.getReport)
   router.get('/api/groups/:prefix', ctrl.getGroup)

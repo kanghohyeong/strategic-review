@@ -1,9 +1,13 @@
 import { Request, Response } from 'express'
 import { marked } from 'marked'
-import { ReportServicePort } from '../../../../domain/ports/report.service.port'
+import { ReportServicePort } from '../../../../domain/report/ports/report.service.port'
+import { PromptServicePort } from '../../../../domain/prompt/ports/prompt.service.port'
 
 export class WebController {
-  constructor(private readonly service: ReportServicePort) {}
+  constructor(
+    private readonly reportService: ReportServicePort,
+    private readonly promptService: PromptServicePort,
+  ) {}
 
   private handleError(res: Response, err: unknown): void {
     if (err instanceof Error) {
@@ -24,7 +28,7 @@ export class WebController {
   listReports = (req: Request, res: Response): void => {
     try {
       const page = parseInt(String(req.query.page ?? '1'), 10) || 1
-      const data = this.service.getPaginatedGroups(page)
+      const data = this.reportService.getPaginatedGroups(page)
       res.render('list', data)
     } catch (err) {
       this.handleError(res, err)
@@ -50,7 +54,7 @@ export class WebController {
         return
       }
 
-      const filename = this.service.createReport({ name, objective, constraints })
+      const filename = this.reportService.createReport({ name, objective, constraints })
       res.redirect(`/reports/${filename}`)
     } catch (err) {
       this.handleError(res, err)
@@ -60,14 +64,14 @@ export class WebController {
   getReport = async (req: Request, res: Response): Promise<void> => {
     try {
       const { filename } = req.params
-      const file = this.service.getReportByFilename(filename)
-      const group = this.service.getGroupByPrefix(file.prefix)
+      const file = this.reportService.getReportByFilename(filename)
+      const group = this.reportService.getGroupByPrefix(file.prefix)
       const renderedContent = file.content
         ? String(await marked.parse(file.content))
         : '<p style="color:#888">No content available.</p>'
       const baseUrl = `${req.protocol}://${req.get('host')}`
-      const agentPrompt = this.service.getAgentPrompt(filename, baseUrl)
-      res.render('detail', { file, group, renderedContent, strategicDir: this.service.getStrategicRelDir(), agentPrompt })
+      const agentPrompt = this.promptService.getAgentPrompt(file, baseUrl)
+      res.render('detail', { file, group, renderedContent, strategicDir: this.reportService.getStrategicRelDir(), agentPrompt })
     } catch (err) {
       this.handleError(res, err)
     }
@@ -79,18 +83,18 @@ export class WebController {
       const comment = String(req.body.comment ?? '').trim()
 
       if (!comment) {
-        const file = this.service.getReportByFilename(filename)
-        const group = this.service.getGroupByPrefix(file.prefix)
+        const file = this.reportService.getReportByFilename(filename)
+        const group = this.reportService.getGroupByPrefix(file.prefix)
         const renderedContent = file.content
           ? String(await marked.parse(file.content))
           : '<p style="color:#888">No content available.</p>'
         const baseUrl = `${req.protocol}://${req.get('host')}`
-        const agentPrompt = this.service.getAgentPrompt(filename, baseUrl)
-        res.render('detail', { file, group, renderedContent, strategicDir: this.service.getStrategicRelDir(), agentPrompt })
+        const agentPrompt = this.promptService.getAgentPrompt(file, baseUrl)
+        res.render('detail', { file, group, renderedContent, strategicDir: this.reportService.getStrategicRelDir(), agentPrompt })
         return
       }
 
-      this.service.approveReport(filename, comment)
+      this.reportService.approveReport(filename, comment)
       res.redirect(`/reports/${filename}`)
     } catch (err) {
       this.handleError(res, err)
@@ -103,18 +107,18 @@ export class WebController {
       const comment = String(req.body.comment ?? '').trim()
 
       if (!comment) {
-        const file = this.service.getReportByFilename(filename)
-        const group = this.service.getGroupByPrefix(file.prefix)
+        const file = this.reportService.getReportByFilename(filename)
+        const group = this.reportService.getGroupByPrefix(file.prefix)
         const renderedContent = file.content
           ? String(await marked.parse(file.content))
           : '<p style="color:#888">No content available.</p>'
         const baseUrl = `${req.protocol}://${req.get('host')}`
-        const agentPrompt = this.service.getAgentPrompt(filename, baseUrl)
-        res.render('detail', { file, group, renderedContent, strategicDir: this.service.getStrategicRelDir(), agentPrompt })
+        const agentPrompt = this.promptService.getAgentPrompt(file, baseUrl)
+        res.render('detail', { file, group, renderedContent, strategicDir: this.reportService.getStrategicRelDir(), agentPrompt })
         return
       }
 
-      const newFilename = this.service.rejectReport(filename, comment)
+      const newFilename = this.reportService.rejectReport(filename, comment)
       res.redirect(`/reports/${newFilename}`)
     } catch (err) {
       this.handleError(res, err)

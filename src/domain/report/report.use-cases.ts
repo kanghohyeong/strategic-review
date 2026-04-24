@@ -1,5 +1,5 @@
 import path from 'path'
-import { ReportFile, ReportGroup, PaginatedGroups } from '../types'
+import { ReportFile, ReportGroup, PaginatedGroups } from '../../types'
 import { ReportRepositoryPort } from './ports/report.repository.port'
 import { ReportServicePort } from './ports/report.service.port'
 
@@ -73,37 +73,5 @@ export class ReportUseCases implements ReportServicePort {
   getStrategicRelDir(): string {
     const rel = path.relative(process.cwd(), STRATEGIC_DIR)
     return rel.startsWith('..') ? STRATEGIC_DIR : rel
-  }
-
-  getAgentPrompt(filename: string, baseUrl: string): string {
-    const file = this.getReportByFilename(filename)
-    const patchCmd = `PATCH ${baseUrl}/api/reports/${file.filename}\nContent-Type: text/markdown\nBody: (작성한 보고서 전문)`
-
-    if (file.status === 'init') {
-      const lines = [
-        '아래 목표와 제약사항을 바탕으로 전략 검토 보고서를 Markdown 형식으로 작성하고,',
-        '작성이 완료되면 다음 API로 저장하세요.',
-        '',
-        `목표: ${file.objective}`,
-      ]
-      if (file.constraints) lines.push(`제약사항: ${file.constraints}`)
-      lines.push('', '저장 방법:', patchCmd)
-      return lines.join('\n')
-    }
-
-    if (file.status === 'revision') {
-      return [
-        '아래 리뷰 코멘트를 반영하여 전략 검토 보고서를 수정하고,',
-        '수정이 완료되면 다음 API로 저장하세요.',
-        '',
-        `목표: ${file.objective}`,
-        `리뷰 코멘트: ${file.reviewComment ?? ''}`,
-        '',
-        '저장 방법:',
-        patchCmd,
-      ].join('\n')
-    }
-
-    return ''
   }
 }

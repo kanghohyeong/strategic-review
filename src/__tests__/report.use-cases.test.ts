@@ -1,6 +1,6 @@
 import { initDb, getDb } from '../infrastructure/db'
 import { SqliteRepository } from '../adapters/outbound/sqlite/sqlite.repository'
-import { ReportUseCases } from '../domain/report.use-cases'
+import { ReportUseCases } from '../domain/report/report.use-cases'
 
 let useCases: ReportUseCases
 
@@ -135,50 +135,3 @@ describe('isValidFilename', () => {
   })
 })
 
-describe('getAgentPrompt', () => {
-  const baseUrl = 'http://localhost:3000'
-
-  it('init 상태이고 제약사항이 있으면 목표·제약사항·PATCH 명령을 포함한 프롬프트를 반환한다', () => {
-    const filename = useCases.createReport({ name: '전략', objective: '수익 극대화', constraints: '예산 1억' })
-    const prompt = useCases.getAgentPrompt(filename, baseUrl)
-
-    expect(prompt).toContain('목표: 수익 극대화')
-    expect(prompt).toContain('제약사항: 예산 1억')
-    expect(prompt).toContain(`PATCH ${baseUrl}/api/reports/${filename}`)
-  })
-
-  it('init 상태이고 제약사항이 없으면 제약사항 줄을 포함하지 않는다', () => {
-    const filename = useCases.createReport({ name: '전략', objective: '수익 극대화', constraints: '' })
-    const prompt = useCases.getAgentPrompt(filename, baseUrl)
-
-    expect(prompt).toContain('목표: 수익 극대화')
-    expect(prompt).not.toContain('제약사항:')
-    expect(prompt).toContain(`PATCH ${baseUrl}/api/reports/${filename}`)
-  })
-
-  it('revision 상태이면 리뷰 코멘트·PATCH 명령을 포함한 프롬프트를 반환한다', () => {
-    const f1 = useCases.createReport({ name: '전략', objective: '수익 극대화', constraints: '' })
-    const f2 = useCases.rejectReport(f1, '논리 보완 필요')
-    const prompt = useCases.getAgentPrompt(f2, baseUrl)
-
-    expect(prompt).toContain('리뷰 코멘트: 논리 보완 필요')
-    expect(prompt).toContain('목표: 수익 극대화')
-    expect(prompt).toContain(`PATCH ${baseUrl}/api/reports/${f2}`)
-  })
-
-  it('submit 상태이면 빈 문자열을 반환한다', () => {
-    const filename = useCases.createReport({ name: '전략', objective: '목표', constraints: '' })
-    useCases.submitReport(filename, '# 보고서')
-    const prompt = useCases.getAgentPrompt(filename, baseUrl)
-
-    expect(prompt).toBe('')
-  })
-
-  it('approve 상태이면 빈 문자열을 반환한다', () => {
-    const filename = useCases.createReport({ name: '전략', objective: '목표', constraints: '' })
-    useCases.approveReport(filename)
-    const prompt = useCases.getAgentPrompt(filename, baseUrl)
-
-    expect(prompt).toBe('')
-  })
-})

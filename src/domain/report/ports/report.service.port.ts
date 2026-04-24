@@ -1,4 +1,4 @@
-import { ReportFile, ReportGroup, PaginatedGroups } from '../../types'
+import { ReportFile, ReportGroup, PaginatedGroups } from '../../../types'
 
 export interface ReportServicePort {
   createReport(params: { name: string; objective: string; constraints: string }): string
@@ -10,5 +10,4 @@ export interface ReportServicePort {
   submitReport(filename: string, content: string): void
   isValidFilename(filename: string): boolean
   getStrategicRelDir(): string
-  getAgentPrompt(filename: string, baseUrl: string): string
 }

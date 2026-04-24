@@ -1,17 +1,17 @@
 import { Request, Response } from 'express'
-import { ReportServicePort } from '../../../../domain/ports/report.service.port'
+import { ReportServicePort } from '../../../../domain/report/ports/report.service.port'
 
 export class ApiController {
-  constructor(private readonly service: ReportServicePort) {}
+  constructor(private readonly reportService: ReportServicePort) {}
 
   getReport = (req: Request, res: Response): void => {
     const { filename } = req.params
-    if (!this.service.isValidFilename(filename)) {
+    if (!this.reportService.isValidFilename(filename)) {
       res.status(400).json({ error: 'Invalid filename' })
       return
     }
     try {
-      res.json(this.service.getReportByFilename(filename))
+      res.json(this.reportService.getReportByFilename(filename))
     } catch {
       res.status(404).json({ error: 'Report not found' })
     }
@@ -19,7 +19,7 @@ export class ApiController {
 
   getGroup = (req: Request, res: Response): void => {
     try {
-      res.json(this.service.getGroupByPrefix(req.params.prefix))
+      res.json(this.reportService.getGroupByPrefix(req.params.prefix))
     } catch {
       res.status(404).json({ error: 'Group not found' })
     }
@@ -27,14 +27,14 @@ export class ApiController {
 
   patchReport = (req: Request, res: Response): void => {
     const { filename } = req.params
-    if (!this.service.isValidFilename(filename)) {
+    if (!this.reportService.isValidFilename(filename)) {
       res.status(400).json({ error: 'Invalid filename' })
       return
     }
     const content = typeof req.body === 'string' ? req.body : ''
     try {
-      this.service.submitReport(filename, content)
-      res.json(this.service.getReportByFilename(filename))
+      this.reportService.submitReport(filename, content)
+      res.json(this.reportService.getReportByFilename(filename))
     } catch {
       res.status(404).json({ error: 'Report not found' })
     }

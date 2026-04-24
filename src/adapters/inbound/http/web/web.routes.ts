@@ -1,10 +1,11 @@
 import { Router } from 'express'
-import { ReportServicePort } from '../../../../domain/ports/report.service.port'
+import { ReportServicePort } from '../../../../domain/report/ports/report.service.port'
+import { PromptServicePort } from '../../../../domain/prompt/ports/prompt.service.port'
 import { WebController } from './web.controller'
 
-export function createWebRouter(service: ReportServicePort): Router {
+export function createWebRouter(reportService: ReportServicePort, promptService: PromptServicePort): Router {
   const router = Router()
-  const ctrl = new WebController(service)
+  const ctrl = new WebController(reportService, promptService)
 
   router.get('/', ctrl.listReports)
   router.get('/reports/new', ctrl.newReportForm)

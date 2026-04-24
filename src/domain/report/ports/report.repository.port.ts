@@ -1,4 +1,4 @@
-import { ReportFile, ReportGroup, PaginatedGroups, ReportStatus } from '../../types'
+import { ReportFile, ReportGroup, PaginatedGroups, ReportStatus } from '../../../types'
 
 export interface ReportRepositoryPort {
   findByFilename(filename: string): ReportFile
