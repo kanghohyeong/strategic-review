@@ -10,9 +10,8 @@ beforeEach(() => {
 
 function setupReport(prefix = '20991231_235959', version = 1, name = '전략') {
   repo.createGroupIfNotExists(prefix, name, '목표', '제약')
-  const filename = `${prefix}.v${version}.md`
-  repo.insertReport(filename, prefix, version)
-  return filename
+  repo.insertReport(prefix, version)
+  return `${prefix}.v${version}.md`
 }
 
 describe('createGroupIfNotExists', () => {
@@ -77,7 +76,7 @@ describe('findGroupByPrefix', () => {
   it('여러 버전이 있으면 allFiles에 모두 포함된다', () => {
     const prefix = '20991231_235959'
     setupReport(prefix, 1)
-    repo.insertReport(`${prefix}.v2.md`, prefix, 2)
+    repo.insertReport(prefix, 2)
     const group = repo.findGroupByPrefix(prefix)
     expect(group.allFiles).toHaveLength(2)
     expect(group.latestFile.version).toBe(2)
@@ -107,7 +106,7 @@ describe('getPaginatedGroups', () => {
   it('두 버전이 있어도 같은 그룹으로 묶인다', () => {
     const prefix = '20991231_235959'
     setupReport(prefix, 1)
-    repo.insertReport(`${prefix}.v2.md`, prefix, 2)
+    repo.insertReport(prefix, 2)
     const result = repo.getPaginatedGroups(1)
     expect(result.groups).toHaveLength(1)
     expect(result.groups[0].allFiles).toHaveLength(2)
@@ -117,7 +116,7 @@ describe('getPaginatedGroups', () => {
     for (let i = 0; i < 11; i++) {
       const prefix = `2099123${i}_235959`.padEnd(15, '0').slice(0, 15)
       repo.createGroupIfNotExists(prefix, `전략${i}`, '목표', '제약')
-      repo.insertReport(`${prefix}.v1.md`, prefix, 1)
+      repo.insertReport(prefix, 1)
     }
     const page1 = repo.getPaginatedGroups(1)
     const page2 = repo.getPaginatedGroups(2)

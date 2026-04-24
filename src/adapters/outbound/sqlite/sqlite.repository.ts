@@ -1,13 +1,13 @@
 import Database from 'better-sqlite3'
 import { ReportFile, ReportGroup, PaginatedGroups, ReportStatus } from '../../../types'
 import { ReportRepositoryPort } from '../../../domain/ports/report.repository.port'
+import { parseFilename } from '../../../domain/filename.utils'
 
 const PAGE_SIZE = 10
 
 interface ReportRow {
   id: number
-  filename: string
-  prefix: string
+  group_id: number
   version: number
   status: string
   review_comment: string | null
@@ -16,6 +16,7 @@ interface ReportRow {
 }
 
 interface ReportRowWithGroup extends ReportRow {
+  prefix: string
   name: string
   objective: string
   constraints: string
@@ -23,7 +24,7 @@ interface ReportRowWithGroup extends ReportRow {
 
 function rowToReportFile(row: ReportRowWithGroup): ReportFile {
   return {
-    filename: row.filename,
+    filename: `${row.prefix}.v${row.version}.md`,
     prefix: row.prefix,
     version: row.version,
     name: row.name,
@@ -45,25 +46,36 @@ export class SqliteRepository implements ReportRepositoryPort {
     return result.changes > 0
   }
 
-  insertReport(filename: string, prefix: string, version: number): void {
+  insertReport(prefix: string, version: number): void {
+    const group = this.db
+      .prepare('SELECT id FROM report_groups WHERE prefix = ?')
+      .get(prefix) as { id: number } | undefined
+    if (!group) throw new Error(`Group not found: ${prefix}`)
     this.db
-      .prepare("INSERT INTO reports (filename, prefix, version, status, content) VALUES (?, ?, ?, 'init', '')")
-      .run(filename, prefix, version)
+      .prepare("INSERT INTO reports (group_id, version, status, content) VALUES (?, ?, 'init', '')")
+      .run(group.id, version)
   }
 
   filenameExists(filename: string): boolean {
-    const row = this.db.prepare('SELECT 1 FROM reports WHERE filename = ?').get(filename)
+    const { prefix, version } = parseFilename(filename)
+    const row = this.db
+      .prepare(
+        `SELECT 1 FROM reports r JOIN report_groups g ON r.group_id = g.id
+         WHERE g.prefix = ? AND r.version = ?`
+      )
+      .get(prefix, version)
     return row !== undefined
   }
 
   findByFilename(filename: string): ReportFile {
+    const { prefix, version } = parseFilename(filename)
     const row = this.db
       .prepare(
-        `SELECT r.*, g.name, g.objective, g.constraints
-         FROM reports r JOIN report_groups g USING (prefix)
-         WHERE r.filename = ?`
+        `SELECT r.*, g.prefix, g.name, g.objective, g.constraints
+         FROM reports r JOIN report_groups g ON r.group_id = g.id
+         WHERE g.prefix = ? AND r.version = ?`
       )
-      .get(filename) as ReportRowWithGroup | undefined
+      .get(prefix, version) as ReportRowWithGroup | undefined
     if (!row) throw new Error(`Report not found: ${filename}`)
     return rowToReportFile(row)
   }
@@ -71,9 +83,9 @@ export class SqliteRepository implements ReportRepositoryPort {
   findGroupByPrefix(prefix: string): ReportGroup {
     const rows = this.db
       .prepare(
-        `SELECT r.*, g.name, g.objective, g.constraints
-         FROM reports r JOIN report_groups g USING (prefix)
-         WHERE r.prefix = ? ORDER BY r.version DESC`
+        `SELECT r.*, g.prefix, g.name, g.objective, g.constraints
+         FROM reports r JOIN report_groups g ON r.group_id = g.id
+         WHERE g.prefix = ? ORDER BY r.version DESC`
       )
       .all(prefix) as ReportRowWithGroup[]
     if (rows.length === 0) throw new Error(`No files found for prefix: ${prefix}`)
@@ -100,10 +112,10 @@ export class SqliteRepository implements ReportRepositoryPort {
     const placeholders = prefixes.map(() => '?').join(',')
     const rows = this.db
       .prepare(
-        `SELECT r.*, g.name, g.objective, g.constraints
-         FROM reports r JOIN report_groups g USING (prefix)
-         WHERE r.prefix IN (${placeholders})
-         ORDER BY r.prefix DESC, r.version DESC`
+        `SELECT r.*, g.prefix, g.name, g.objective, g.constraints
+         FROM reports r JOIN report_groups g ON r.group_id = g.id
+         WHERE g.prefix IN (${placeholders})
+         ORDER BY g.prefix DESC, r.version DESC`
       )
       .all(...prefixes) as ReportRowWithGroup[]
 
@@ -122,16 +134,24 @@ export class SqliteRepository implements ReportRepositoryPort {
   }
 
   updateStatus(filename: string, status: ReportStatus, comment?: string): void {
+    const { prefix, version } = parseFilename(filename)
     const result = this.db
-      .prepare('UPDATE reports SET status = ?, review_comment = ? WHERE filename = ?')
-      .run(status, comment ?? null, filename)
+      .prepare(
+        `UPDATE reports SET status = ?, review_comment = ?
+         WHERE group_id = (SELECT id FROM report_groups WHERE prefix = ?) AND version = ?`
+      )
+      .run(status, comment ?? null, prefix, version)
     if (result.changes === 0) throw new Error(`Report not found: ${filename}`)
   }
 
   updateContentAndStatus(filename: string, content: string, status: ReportStatus): void {
+    const { prefix, version } = parseFilename(filename)
     const result = this.db
-      .prepare('UPDATE reports SET content = ?, status = ? WHERE filename = ?')
-      .run(content, status, filename)
+      .prepare(
+        `UPDATE reports SET content = ?, status = ?
+         WHERE group_id = (SELECT id FROM report_groups WHERE prefix = ?) AND version = ?`
+      )
+      .run(content, status, prefix, version)
     if (result.changes === 0) throw new Error(`Report not found: ${filename}`)
   }
 }

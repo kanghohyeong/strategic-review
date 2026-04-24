@@ -27,7 +27,7 @@ export class ReportUseCases implements ReportServicePort {
       const filename = `${prefix}.v1.md`
       if (!this.repo.filenameExists(filename)) {
         this.repo.createGroupIfNotExists(prefix, params.name, params.objective, params.constraints)
-        this.repo.insertReport(filename, prefix, 1)
+        this.repo.insertReport(prefix, 1)
         return filename
       }
     }
@@ -56,7 +56,7 @@ export class ReportUseCases implements ReportServicePort {
     const rejected = this.repo.findByFilename(filename)
     const newVersion = rejected.version + 1
     const newFilename = `${rejected.prefix}.v${newVersion}.md`
-    this.repo.insertReport(newFilename, rejected.prefix, newVersion)
+    this.repo.insertReport(rejected.prefix, newVersion)
     this.repo.updateStatus(newFilename, 'revision')
     return newFilename
   }
