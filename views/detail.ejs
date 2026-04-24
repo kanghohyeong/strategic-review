@@ -25,18 +25,18 @@
       </div>
       <% } %>
 
-      <% if (file.status === 'init' || file.status === 'revision') { %>
+      <% if (agentPrompt) { %>
       <div class="detail-inner-section">
         <div class="command-guide">
           <p class="command-guide-text">
             <% if (file.status === 'init') { %>
-            To request a strategy review from the agent, enter the command below
+            To request a strategy review from the agent, copy the prompt below
             <% } else { %>
-            To request a strategy revision from the agent, enter the command below
+            To request a strategy revision from the agent, copy the prompt below
             <% } %>
           </p>
           <div class="command-snippet">
-            <code id="cmd-text">/strategic-review-interactive <%= strategicDir %>/<%= file.filename %></code>
+            <pre id="cmd-text"><%= agentPrompt %></pre>
             <button class="btn-copy" onclick="copyCommand()">Copy</button>
           </div>
         </div>

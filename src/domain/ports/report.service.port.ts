@@ -10,4 +10,5 @@ export interface ReportServicePort {
   submitReport(filename: string, content: string): void
   isValidFilename(filename: string): boolean
   getStrategicRelDir(): string
+  getAgentPrompt(filename: string, baseUrl: string): string
 }

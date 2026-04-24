@@ -65,7 +65,9 @@ export class WebController {
       const renderedContent = file.content
         ? String(await marked.parse(file.content))
         : '<p style="color:#888">No content available.</p>'
-      res.render('detail', { file, group, renderedContent, strategicDir: this.service.getStrategicRelDir() })
+      const baseUrl = `${req.protocol}://${req.get('host')}`
+      const agentPrompt = this.service.getAgentPrompt(filename, baseUrl)
+      res.render('detail', { file, group, renderedContent, strategicDir: this.service.getStrategicRelDir(), agentPrompt })
     } catch (err) {
       this.handleError(res, err)
     }
@@ -82,7 +84,9 @@ export class WebController {
         const renderedContent = file.content
           ? String(await marked.parse(file.content))
           : '<p style="color:#888">No content available.</p>'
-        res.render('detail', { file, group, renderedContent, strategicDir: this.service.getStrategicRelDir() })
+        const baseUrl = `${req.protocol}://${req.get('host')}`
+        const agentPrompt = this.service.getAgentPrompt(filename, baseUrl)
+        res.render('detail', { file, group, renderedContent, strategicDir: this.service.getStrategicRelDir(), agentPrompt })
         return
       }
 
@@ -104,7 +108,9 @@ export class WebController {
         const renderedContent = file.content
           ? String(await marked.parse(file.content))
           : '<p style="color:#888">No content available.</p>'
-        res.render('detail', { file, group, renderedContent, strategicDir: this.service.getStrategicRelDir() })
+        const baseUrl = `${req.protocol}://${req.get('host')}`
+        const agentPrompt = this.service.getAgentPrompt(filename, baseUrl)
+        res.render('detail', { file, group, renderedContent, strategicDir: this.service.getStrategicRelDir(), agentPrompt })
         return
       }
 
