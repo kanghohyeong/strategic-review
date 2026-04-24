@@ -1,22 +1,22 @@
 import request from 'supertest'
-import express from 'express'
-import { router } from '../routes'
-import { initDb } from '../db'
-import { createReport, rejectReport } from '../reportService'
+import { initDb, getDb } from '../infrastructure/db'
+import { SqliteRepository } from '../adapters/outbound/sqlite/sqlite.repository'
+import { ReportUseCases } from '../domain/report.use-cases'
+import { createApp } from '../infrastructure/app'
 
-const app = express()
-app.use(express.json())
-app.use(express.urlencoded({ extended: false }))
-app.use(express.text({ type: ['text/plain', 'text/markdown'] }))
-app.use('/', router)
+let app: ReturnType<typeof createApp> // express.Application
+let useCases: ReportUseCases
 
 beforeEach(() => {
   initDb(':memory:')
+  const repo = new SqliteRepository(getDb())
+  useCases = new ReportUseCases(repo)
+  app = createApp(useCases)
 })
 
 describe('GET /api/reports/:filename', () => {
   it('보고서 JSON을 반환한다', async () => {
-    const filename = createReport({ name: '전략', objective: '목표', constraints: '제약' })
+    const filename = useCases.createReport({ name: '전략', objective: '목표', constraints: '제약' })
     const res = await request(app).get(`/api/reports/${filename}`)
     expect(res.status).toBe(200)
     expect(res.body.filename).toBe(filename)
@@ -37,7 +37,7 @@ describe('GET /api/reports/:filename', () => {
 
 describe('GET /api/groups/:prefix', () => {
   it('prefix로 그룹 JSON을 반환한다', async () => {
-    const filename = createReport({ name: '전략', objective: '목표', constraints: '제약' })
+    const filename = useCases.createReport({ name: '전략', objective: '목표', constraints: '제약' })
     const prefix = filename.replace(/\.v\d+\.md$/, '')
     const res = await request(app).get(`/api/groups/${prefix}`)
     expect(res.status).toBe(200)
@@ -46,9 +46,9 @@ describe('GET /api/groups/:prefix', () => {
   })
 
   it('반려 후 여러 버전이 포함된다', async () => {
-    const f1 = createReport({ name: '전략', objective: '목표', constraints: '제약' })
+    const f1 = useCases.createReport({ name: '전략', objective: '목표', constraints: '제약' })
     const prefix = f1.replace(/\.v\d+\.md$/, '')
-    rejectReport(f1, '수정 필요')
+    useCases.rejectReport(f1, '수정 필요')
     const res = await request(app).get(`/api/groups/${prefix}`)
     expect(res.status).toBe(200)
     expect(res.body.allFiles).toHaveLength(2)
@@ -63,7 +63,7 @@ describe('GET /api/groups/:prefix', () => {
 
 describe('PATCH /api/reports/:filename', () => {
   it('content를 업데이트하고 status를 submit으로 변경한다', async () => {
-    const filename = createReport({ name: '전략', objective: '목표', constraints: '제약' })
+    const filename = useCases.createReport({ name: '전략', objective: '목표', constraints: '제약' })
     const res = await request(app)
       .patch(`/api/reports/${filename}`)
       .type('text/markdown')

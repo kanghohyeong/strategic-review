@@ -1,7 +1,7 @@
 #!/usr/bin/env node
 import fs from 'fs'
 import path from 'path'
-import { initDb } from './db'
+import { initDb } from './infrastructure/db'
 
 // Parse --port argument
 const args = process.argv.slice(2)

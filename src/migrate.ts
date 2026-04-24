@@ -1,8 +1,8 @@
 import fs from 'fs'
 import path from 'path'
 import matter from 'gray-matter'
-import { initDb, getDb } from './db'
-import { isValidFilename, parseFilename } from './reportService'
+import { initDb, getDb } from './infrastructure/db'
+import { isValidFilename, parseFilename } from './domain/filename.utils'
 
 const strategicDir = process.env.STRATEGIC_DIR || path.join(process.cwd(), '.strategic')
 
