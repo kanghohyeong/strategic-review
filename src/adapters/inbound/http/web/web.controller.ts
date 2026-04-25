@@ -1,7 +1,7 @@
 import { Request, Response } from 'express'
 import { marked } from 'marked'
-import { ReportServicePort } from '../../../../domain/report/ports/report.service.port'
-import { PromptServicePort } from '../../../../domain/prompt/ports/prompt.service.port'
+import { ReportServicePort } from '../../../../application/ports/inbound/report.service.port'
+import { PromptServicePort } from '../../../../application/ports/inbound/prompt.service.port'
 
 export class WebController {
   constructor(

@@ -1,5 +1,5 @@
-import { PromptUseCases } from '../domain/prompt/prompt.use-cases'
-import { ReportFile, ReportGroup } from '../types'
+import { PromptUseCases } from '../application/use-cases/prompt.use-cases'
+import { ReportFile, ReportGroup } from '../domain/report/report'
 
 const promptUseCases = new PromptUseCases()
 const baseUrl = 'http://localhost:3000'

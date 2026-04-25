@@ -1,4 +1,4 @@
-import { ReportFile, ReportGroup, PaginatedGroups } from '../../../types'
+import { ReportFile, ReportGroup, PaginatedGroups } from '../../../domain/report/report'
 
 export interface ReportServicePort {
   createReport(params: { name: string; objective: string; constraints: string }): string

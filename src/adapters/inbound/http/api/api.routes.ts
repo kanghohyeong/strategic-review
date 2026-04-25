@@ -1,5 +1,5 @@
 import { Router } from 'express'
-import { ReportServicePort } from '../../../../domain/report/ports/report.service.port'
+import { ReportServicePort } from '../../../../application/ports/inbound/report.service.port'
 import { ApiController } from './api.controller'
 
 export function createApiRouter(reportService: ReportServicePort): Router {

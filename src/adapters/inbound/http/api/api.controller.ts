@@ -1,5 +1,5 @@
 import { Request, Response } from 'express'
-import { ReportServicePort } from '../../../../domain/report/ports/report.service.port'
+import { ReportServicePort } from '../../../../application/ports/inbound/report.service.port'
 
 export class ApiController {
   constructor(private readonly reportService: ReportServicePort) {}

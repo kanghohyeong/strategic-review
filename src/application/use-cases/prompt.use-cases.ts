@@ -1,5 +1,5 @@
-import { ReportFile, ReportGroup } from '../../types'
-import { PromptServicePort } from './ports/prompt.service.port'
+import { ReportFile, ReportGroup } from '../../domain/report/report'
+import { PromptServicePort } from '../ports/inbound/prompt.service.port'
 
 const REPORT_SECTIONS_GUIDE = `보고서는 아래 8개 섹션을 반드시 포함해야 합니다.
 

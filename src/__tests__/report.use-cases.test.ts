@@ -1,6 +1,6 @@
 import { initDb, getDb } from '../infrastructure/db'
 import { SqliteRepository } from '../adapters/outbound/sqlite/sqlite.repository'
-import { ReportUseCases } from '../domain/report/report.use-cases'
+import { ReportUseCases } from '../application/use-cases/report.use-cases'
 
 let useCases: ReportUseCases
 

@@ -1,7 +1,7 @@
 import express from 'express'
 import path from 'path'
-import { ReportServicePort } from '../domain/report/ports/report.service.port'
-import { PromptServicePort } from '../domain/prompt/ports/prompt.service.port'
+import { ReportServicePort } from '../application/ports/inbound/report.service.port'
+import { PromptServicePort } from '../application/ports/inbound/prompt.service.port'
 import { createWebRouter } from '../adapters/inbound/http/web/web.routes'
 import { createApiRouter } from '../adapters/inbound/http/api/api.routes'
 

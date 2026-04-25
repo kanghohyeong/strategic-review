@@ -12,3 +12,17 @@ export function parseFilename(filename: string): { prefix: string; version: numb
     version: parseInt(match[2], 10),
   }
 }
+
+export function generatePrefix(now: Date, counter: number): string {
+  const pad = (n: number, len = 2) => String(n).padStart(len, '0')
+  const base = [
+    now.getFullYear(),
+    pad(now.getMonth() + 1),
+    pad(now.getDate()),
+    '_',
+    pad(now.getHours()),
+    pad(now.getMinutes()),
+    pad(now.getSeconds()),
+  ].join('')
+  return counter === 0 ? base : `${base}_${counter}`
+}

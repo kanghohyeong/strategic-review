@@ -1,29 +1,18 @@
 import path from 'path'
-import { ReportFile, ReportGroup, PaginatedGroups } from '../../types'
-import { ReportRepositoryPort } from './ports/report.repository.port'
-import { ReportServicePort } from './ports/report.service.port'
+import { ReportFile, ReportGroup, PaginatedGroups } from '../../domain/report/report'
+import { ReportRepositoryPort } from '../ports/outbound/report.repository.port'
+import { ReportServicePort } from '../ports/inbound/report.service.port'
+import { isValidFilename, generatePrefix } from '../../domain/report/filename.utils'
 
 const STRATEGIC_DIR = process.env.STRATEGIC_DIR || path.join(process.cwd(), '.strategic')
-const FILENAME_REGEX = /^\d{8}_\d{6}(_\d+)?\.v\d+\.md$/
 
 export class ReportUseCases implements ReportServicePort {
   constructor(private readonly repo: ReportRepositoryPort) {}
 
   createReport(params: { name: string; objective: string; constraints: string }): string {
     const now = new Date()
-    const pad = (n: number, len = 2) => String(n).padStart(len, '0')
-    const basePrefix = [
-      now.getFullYear(),
-      pad(now.getMonth() + 1),
-      pad(now.getDate()),
-      '_',
-      pad(now.getHours()),
-      pad(now.getMinutes()),
-      pad(now.getSeconds()),
-    ].join('')
-
     for (let counter = 0; counter < 1000; counter++) {
-      const prefix = counter === 0 ? basePrefix : `${basePrefix}_${counter}`
+      const prefix = generatePrefix(now, counter)
       const filename = `${prefix}.v1.md`
       if (!this.repo.filenameExists(filename)) {
         this.repo.createGroupIfNotExists(prefix, params.name, params.objective, params.constraints)
@@ -35,7 +24,7 @@ export class ReportUseCases implements ReportServicePort {
   }
 
   getReportByFilename(filename: string): ReportFile {
-    if (!this.isValidFilename(filename)) throw new Error('Invalid filename')
+    if (!isValidFilename(filename)) throw new Error('Invalid filename')
     return this.repo.findByFilename(filename)
   }
 
@@ -62,12 +51,12 @@ export class ReportUseCases implements ReportServicePort {
   }
 
   submitReport(filename: string, content: string): void {
-    if (!this.isValidFilename(filename)) throw new Error('Invalid filename')
+    if (!isValidFilename(filename)) throw new Error('Invalid filename')
     this.repo.updateContentAndStatus(filename, content, 'submit')
   }
 
   isValidFilename(filename: string): boolean {
-    return FILENAME_REGEX.test(filename)
+    return isValidFilename(filename)
   }
 
   getStrategicRelDir(): string {

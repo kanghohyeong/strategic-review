@@ -1,6 +1,6 @@
 import Database from 'better-sqlite3'
-import { ReportFile, ReportGroup, PaginatedGroups, ReportStatus } from '../../../types'
-import { ReportRepositoryPort } from '../../../domain/report/ports/report.repository.port'
+import { ReportFile, ReportGroup, PaginatedGroups, ReportStatus } from '../../../domain/report/report'
+import { ReportRepositoryPort } from '../../../application/ports/outbound/report.repository.port'
 import { parseFilename } from '../../../domain/report/filename.utils'
 
 const PAGE_SIZE = 10
