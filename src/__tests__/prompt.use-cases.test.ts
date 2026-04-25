@@ -1,11 +1,15 @@
 import { PromptUseCases } from '../application/use-cases/prompt.use-cases'
-import { ReportFile, ReportGroup } from '../domain/report/report'
+import { Report, ReportGroup, ReportStatus } from '../domain/report/report'
 
 const promptUseCases = new PromptUseCases()
 const baseUrl = 'http://localhost:3000'
 
-function makeFile(overrides: Partial<ReportFile> = {}): ReportFile {
-  return {
+function makeFile(overrides: Partial<{
+  filename: string; prefix: string; version: number; name: string
+  objective: string; constraints: string; status: ReportStatus
+  content: string; reviewComment?: string
+}> = {}): Report {
+  return Report.reconstitute({
     filename: '20240101_120000.v1.md',
     prefix: '20240101_120000',
     version: 1,
@@ -15,15 +19,11 @@ function makeFile(overrides: Partial<ReportFile> = {}): ReportFile {
     status: 'init',
     content: '',
     ...overrides,
-  }
+  })
 }
 
-function makeGroup(files: ReportFile[]): ReportGroup {
-  return {
-    prefix: files[0].prefix,
-    latestFile: files[0],
-    allFiles: files,
-  }
+function makeGroup(files: Report[]): ReportGroup {
+  return new ReportGroup(files[0].prefix, files)
 }
 
 describe('PromptUseCases.getAgentPrompt', () => {

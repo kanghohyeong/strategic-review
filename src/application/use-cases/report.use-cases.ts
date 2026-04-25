@@ -1,5 +1,5 @@
 import path from 'path'
-import { ReportFile, ReportGroup, PaginatedGroups } from '../../domain/report/report'
+import { Report, ReportGroup, PaginatedGroups } from '../../domain/report/report'
 import { ReportRepositoryPort } from '../ports/outbound/report.repository.port'
 import { ReportServicePort } from '../ports/inbound/report.service.port'
 import { isValidFilename, generatePrefix } from '../../domain/report/filename.utils'
@@ -23,7 +23,7 @@ export class ReportUseCases implements ReportServicePort {
     throw new Error('Could not create a unique report filename')
   }
 
-  getReportByFilename(filename: string): ReportFile {
+  getReportByFilename(filename: string): Report {
     if (!isValidFilename(filename)) throw new Error('Invalid filename')
     return this.repo.findByFilename(filename)
   }
@@ -37,22 +37,26 @@ export class ReportUseCases implements ReportServicePort {
   }
 
   approveReport(filename: string, comment?: string): void {
-    this.repo.updateStatus(filename, 'approve', comment)
+    const report = this.repo.findByFilename(filename)
+    report.approve(comment)
+    this.repo.updateStatus(filename, report.status, report.reviewComment)
   }
 
   rejectReport(filename: string, comment: string): string {
-    this.repo.updateStatus(filename, 'reject', comment)
     const rejected = this.repo.findByFilename(filename)
-    const newVersion = rejected.version + 1
-    const newFilename = `${rejected.prefix}.v${newVersion}.md`
-    this.repo.insertReport(rejected.prefix, newVersion)
-    this.repo.updateStatus(newFilename, 'revision', comment)
-    return newFilename
+    rejected.reject(comment)
+    this.repo.updateStatus(filename, rejected.status, rejected.reviewComment)
+    const next = rejected.nextRevision()
+    this.repo.insertReport(next.prefix, next.version)
+    this.repo.updateStatus(next.filename, next.status, next.reviewComment)
+    return next.filename
   }
 
   submitReport(filename: string, content: string): void {
     if (!isValidFilename(filename)) throw new Error('Invalid filename')
-    this.repo.updateContentAndStatus(filename, content, 'submit')
+    const report = this.repo.findByFilename(filename)
+    report.submit(content)
+    this.repo.updateContentAndStatus(filename, report.content, report.status)
   }
 
   isValidFilename(filename: string): boolean {

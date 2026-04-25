@@ -1,5 +1,6 @@
 import { Request, Response } from 'express'
 import { ReportServicePort } from '../../../../application/ports/inbound/report.service.port'
+import { toReportDto, toReportGroupDto } from './dto/report.dto'
 
 export class ApiController {
   constructor(private readonly reportService: ReportServicePort) {}
@@ -11,7 +12,7 @@ export class ApiController {
       return
     }
     try {
-      res.json(this.reportService.getReportByFilename(filename))
+      res.json(toReportDto(this.reportService.getReportByFilename(filename)))
     } catch {
       res.status(404).json({ error: 'Report not found' })
     }
@@ -19,7 +20,7 @@ export class ApiController {
 
   getGroup = (req: Request, res: Response): void => {
     try {
-      res.json(this.reportService.getGroupByPrefix(req.params.prefix))
+      res.json(toReportGroupDto(this.reportService.getGroupByPrefix(req.params.prefix)))
     } catch {
       res.status(404).json({ error: 'Group not found' })
     }
@@ -34,7 +35,7 @@ export class ApiController {
     const content = typeof req.body === 'string' ? req.body : ''
     try {
       this.reportService.submitReport(filename, content)
-      res.json(this.reportService.getReportByFilename(filename))
+      res.json(toReportDto(this.reportService.getReportByFilename(filename)))
     } catch {
       res.status(404).json({ error: 'Report not found' })
     }

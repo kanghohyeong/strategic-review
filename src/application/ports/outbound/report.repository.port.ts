@@ -1,7 +1,7 @@
-import { ReportFile, ReportGroup, PaginatedGroups, ReportStatus } from '../../../domain/report/report'
+import { Report, ReportGroup, PaginatedGroups, ReportStatus } from '../../../domain/report/report'
 
 export interface ReportRepositoryPort {
-  findByFilename(filename: string): ReportFile
+  findByFilename(filename: string): Report
   findGroupByPrefix(prefix: string): ReportGroup
   getPaginatedGroups(page: number): PaginatedGroups
   createGroupIfNotExists(prefix: string, name: string, objective: string, constraints: string): boolean

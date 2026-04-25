@@ -1,5 +1,5 @@
 import Database from 'better-sqlite3'
-import { ReportFile, ReportGroup, PaginatedGroups, ReportStatus } from '../../../domain/report/report'
+import { Report, ReportGroup, PaginatedGroups, ReportStatus } from '../../../domain/report/report'
 import { ReportRepositoryPort } from '../../../application/ports/outbound/report.repository.port'
 import { parseFilename } from '../../../domain/report/filename.utils'
 
@@ -22,8 +22,8 @@ interface ReportRowWithGroup extends ReportRow {
   constraints: string
 }
 
-function rowToReportFile(row: ReportRowWithGroup): ReportFile {
-  return {
+function rowToReport(row: ReportRowWithGroup): Report {
+  return Report.reconstitute({
     filename: `${row.prefix}.v${row.version}.md`,
     prefix: row.prefix,
     version: row.version,
@@ -33,7 +33,7 @@ function rowToReportFile(row: ReportRowWithGroup): ReportFile {
     status: row.status as ReportStatus,
     reviewComment: row.review_comment ?? undefined,
     content: row.content,
-  }
+  })
 }
 
 export class SqliteRepository implements ReportRepositoryPort {
@@ -67,7 +67,7 @@ export class SqliteRepository implements ReportRepositoryPort {
     return row !== undefined
   }
 
-  findByFilename(filename: string): ReportFile {
+  findByFilename(filename: string): Report {
     const { prefix, version } = parseFilename(filename)
     const row = this.db
       .prepare(
@@ -77,7 +77,7 @@ export class SqliteRepository implements ReportRepositoryPort {
       )
       .get(prefix, version) as ReportRowWithGroup | undefined
     if (!row) throw new Error(`Report not found: ${filename}`)
-    return rowToReportFile(row)
+    return rowToReport(row)
   }
 
   findGroupByPrefix(prefix: string): ReportGroup {
@@ -89,8 +89,7 @@ export class SqliteRepository implements ReportRepositoryPort {
       )
       .all(prefix) as ReportRowWithGroup[]
     if (rows.length === 0) throw new Error(`No files found for prefix: ${prefix}`)
-    const allFiles = rows.map(rowToReportFile)
-    return { prefix, latestFile: allFiles[0], allFiles }
+    return new ReportGroup(prefix, rows.map(rowToReport))
   }
 
   getPaginatedGroups(page: number): PaginatedGroups {
@@ -126,8 +125,8 @@ export class SqliteRepository implements ReportRepositoryPort {
     }
 
     const groups: ReportGroup[] = prefixes.map((prefix) => {
-      const allFiles = (groupMap.get(prefix) ?? []).map(rowToReportFile)
-      return { prefix, latestFile: allFiles[0], allFiles }
+      const allFiles = (groupMap.get(prefix) ?? []).map(rowToReport)
+      return new ReportGroup(prefix, allFiles)
     })
 
     return { groups, currentPage: safePage, totalPages, totalCount: total }
