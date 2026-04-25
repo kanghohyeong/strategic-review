@@ -26,6 +26,20 @@ export class ApiController {
     }
   }
 
+  deleteReport = (req: Request, res: Response): void => {
+    const { filename } = req.params
+    if (!this.reportService.isValidFilename(filename)) {
+      res.status(400).json({ error: 'Invalid filename' })
+      return
+    }
+    try {
+      this.reportService.deleteReport(filename)
+      res.status(204).send()
+    } catch {
+      res.status(404).json({ error: 'Report not found' })
+    }
+  }
+
   patchReport = (req: Request, res: Response): void => {
     const { filename } = req.params
     if (!this.reportService.isValidFilename(filename)) {

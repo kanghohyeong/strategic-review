@@ -9,4 +9,5 @@ export interface ReportRepositoryPort {
   updateStatus(filename: string, status: ReportStatus, comment?: string): void
   updateContentAndStatus(filename: string, content: string, status: ReportStatus): void
   filenameExists(filename: string): boolean
+  deleteGroup(prefix: string): void
 }

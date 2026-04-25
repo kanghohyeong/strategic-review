@@ -9,6 +9,7 @@ export function createApiRouter(reportService: ReportServicePort): Router {
   router.get('/api/reports/:filename', ctrl.getReport)
   router.get('/api/groups/:prefix', ctrl.getGroup)
   router.patch('/api/reports/:filename', ctrl.patchReport)
+  router.delete('/api/reports/:filename', ctrl.deleteReport)
 
   return router
 }

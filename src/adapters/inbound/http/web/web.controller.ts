@@ -101,6 +101,15 @@ export class WebController {
     }
   }
 
+  deleteReport = (req: Request, res: Response): void => {
+    try {
+      this.reportService.deleteReport(req.params.filename)
+      res.redirect('/')
+    } catch (err) {
+      this.handleError(res, err)
+    }
+  }
+
   rejectReport = async (req: Request, res: Response): Promise<void> => {
     try {
       const { filename } = req.params

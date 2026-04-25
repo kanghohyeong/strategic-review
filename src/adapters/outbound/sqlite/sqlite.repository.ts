@@ -143,6 +143,13 @@ export class SqliteRepository implements ReportRepositoryPort {
     if (result.changes === 0) throw new Error(`Report not found: ${filename}`)
   }
 
+  deleteGroup(prefix: string): void {
+    const result = this.db
+      .prepare('DELETE FROM report_groups WHERE prefix = ?')
+      .run(prefix)
+    if (result.changes === 0) throw new Error(`Group not found: ${prefix}`)
+  }
+
   updateContentAndStatus(filename: string, content: string, status: ReportStatus): void {
     const { prefix, version } = parseFilename(filename)
     const result = this.db

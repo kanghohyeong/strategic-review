@@ -59,6 +59,12 @@ export class ReportUseCases implements ReportServicePort {
     this.repo.updateContentAndStatus(filename, report.content, report.status)
   }
 
+  deleteReport(filename: string): void {
+    if (!isValidFilename(filename)) throw new Error('Invalid filename')
+    const report = this.repo.findByFilename(filename)
+    this.repo.deleteGroup(report.prefix)
+  }
+
   isValidFilename(filename: string): boolean {
     return isValidFilename(filename)
   }

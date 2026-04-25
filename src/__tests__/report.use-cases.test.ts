@@ -125,6 +125,30 @@ describe('getGroupByPrefix', () => {
   })
 })
 
+describe('deleteReport', () => {
+  it('삭제 후 해당 filename 조회 시 에러를 던진다', () => {
+    const filename = useCases.createReport({ name: '전략', objective: '목표', constraints: '제약' })
+    useCases.deleteReport(filename)
+    expect(() => useCases.getReportByFilename(filename)).toThrow()
+  })
+
+  it('삭제 후 그룹의 다른 버전도 모두 삭제된다', () => {
+    const f1 = useCases.createReport({ name: '전략', objective: '목표', constraints: '제약' })
+    const f2 = useCases.rejectReport(f1, '수정 필요')
+    useCases.deleteReport(f2)
+    expect(() => useCases.getReportByFilename(f1)).toThrow()
+    expect(() => useCases.getReportByFilename(f2)).toThrow()
+  })
+
+  it('존재하지 않는 filename이면 에러를 던진다', () => {
+    expect(() => useCases.deleteReport('99991231_235959.v1.md')).toThrow()
+  })
+
+  it('형식이 잘못된 filename이면 에러를 던진다', () => {
+    expect(() => useCases.deleteReport('invalid.md')).toThrow('Invalid filename')
+  })
+})
+
 describe('isValidFilename', () => {
   it('올바른 형식은 true를 반환한다', () => {
     expect(useCases.isValidFilename('20991231_235959.v1.md')).toBe(true)

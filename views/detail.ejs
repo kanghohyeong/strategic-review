@@ -1,7 +1,13 @@
 <%- include('layouts/head', { title: file.name || 'Report Detail' }) %>
 
     <div class="detail-header">
-      <h2 class="detail-header-title"><%= file.name || '(Unnamed)' %></h2>
+      <div style="display:flex; justify-content:space-between; align-items:flex-start;">
+        <h2 class="detail-header-title"><%= file.name || '(Unnamed)' %></h2>
+        <form method="POST" action="/reports/<%= file.filename %>/delete" style="margin:0;">
+          <button type="submit" class="btn btn-danger"
+            onclick="return confirm('보고서 전체(모든 버전)를 삭제합니다. 계속하시겠습니까?')">Delete</button>
+        </form>
+      </div>
       <div class="detail-header-meta">
         <div class="detail-header-meta-item">
           <span class="detail-header-meta-label">Objective</span>

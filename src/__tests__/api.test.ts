@@ -62,6 +62,31 @@ describe('GET /api/groups/:prefix', () => {
   })
 })
 
+describe('DELETE /api/reports/:filename', () => {
+  it('삭제 성공 시 204를 반환한다', async () => {
+    const filename = useCases.createReport({ name: '전략', objective: '목표', constraints: '제약' })
+    const res = await request(app).delete(`/api/reports/${filename}`)
+    expect(res.status).toBe(204)
+  })
+
+  it('삭제 후 해당 보고서 GET 시 404를 반환한다', async () => {
+    const filename = useCases.createReport({ name: '전략', objective: '목표', constraints: '제약' })
+    await request(app).delete(`/api/reports/${filename}`)
+    const res = await request(app).get(`/api/reports/${filename}`)
+    expect(res.status).toBe(404)
+  })
+
+  it('존재하지 않는 filename이면 404를 반환한다', async () => {
+    const res = await request(app).delete('/api/reports/99991231_235959.v1.md')
+    expect(res.status).toBe(404)
+  })
+
+  it('형식이 잘못된 filename이면 400을 반환한다', async () => {
+    const res = await request(app).delete('/api/reports/invalid.md')
+    expect(res.status).toBe(400)
+  })
+})
+
 describe('PATCH /api/reports/:filename', () => {
   it('content를 업데이트하고 status를 submit으로 변경한다', async () => {
     const filename = useCases.createReport({ name: '전략', objective: '목표', constraints: '제약' })

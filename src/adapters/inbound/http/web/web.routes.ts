@@ -13,6 +13,7 @@ export function createWebRouter(reportService: ReportServicePort, promptService:
   router.get('/reports/:filename', ctrl.getReport)
   router.post('/reports/:filename/approve', ctrl.approveReport)
   router.post('/reports/:filename/reject', ctrl.rejectReport)
+  router.post('/reports/:filename/delete', ctrl.deleteReport)
 
   return router
 }
