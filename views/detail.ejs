@@ -34,6 +34,9 @@
       <% if (agentPrompt) { %>
       <pre id="cmd-text" style="display:none"><%= agentPrompt %></pre>
       <% } %>
+      <% if (file.content) { %>
+      <pre id="report-content" style="display:none"><%= file.content %></pre>
+      <% } %>
 
       <div class="detail-inner-section">
         <div class="version-section-label">Version History</div>
@@ -73,7 +76,12 @@
       </div>
     </div>
     <% } else { %>
-    <div class="markdown-body"><%- renderedContent %></div>
+    <div class="markdown-body-wrapper">
+      <% if (file.content) { %>
+      <button class="btn-copy-report" id="report-copy-btn" onclick="copyReportContent()">복사</button>
+      <% } %>
+      <div class="markdown-body"><%- renderedContent %></div>
+    </div>
     <% } %>
 
     <% if (file.status === 'submit') { %>
@@ -105,6 +113,15 @@
       var btn = document.getElementById('prompt-toggle');
       guide.classList.toggle('expanded');
       btn.textContent = guide.classList.contains('expanded') ? '접기' : '펼치기';
+    }
+
+    function copyReportContent() {
+      const text = document.getElementById('report-content').textContent;
+      navigator.clipboard.writeText(text).then(function() {
+        const btn = document.getElementById('report-copy-btn');
+        btn.textContent = '✓ 복사됨';
+        setTimeout(function() { btn.textContent = '복사'; }, 2000);
+      });
     }
 
     function copyCommand() {
