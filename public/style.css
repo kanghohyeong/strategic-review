@@ -268,3 +268,115 @@ input[type=text]:focus, textarea:focus { outline: none; border-color: var(--prim
 .detail-inner-section .comment-box,
 .detail-inner-section .command-guide,
 .detail-inner-section .version-nav { margin-bottom: 0; }
+
+/* CTA Panel (init/revision 빈 콘텐츠 영역) */
+.cta-panel {
+  background: #fff;
+  border: 1px solid var(--neutral-200);
+  border-radius: var(--radius-lg);
+  padding: var(--sp-12) var(--sp-8);
+  margin-bottom: 20px;
+  display: flex;
+  flex-direction: column;
+  gap: var(--sp-6);
+  min-height: 320px;
+  justify-content: center;
+}
+
+.cta-step {
+  display: flex;
+  align-items: flex-start;
+  gap: var(--sp-4);
+}
+
+.cta-step-number {
+  width: 36px;
+  height: 36px;
+  border-radius: 50%;
+  background: var(--primary-500);
+  color: #fff;
+  font-size: var(--text-base);
+  font-weight: var(--fw-bold);
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  flex-shrink: 0;
+}
+
+.cta-step-dimmed .cta-step-number {
+  background: var(--neutral-200);
+  color: var(--neutral-400);
+}
+
+.cta-step-content {
+  display: flex;
+  flex-direction: column;
+  gap: var(--sp-2);
+}
+
+.cta-step-title {
+  font-size: var(--text-lg);
+  font-weight: var(--fw-semibold);
+  color: var(--neutral-900);
+  margin: 0;
+}
+
+.cta-step-dimmed .cta-step-title {
+  color: var(--neutral-400);
+}
+
+.cta-step-desc {
+  font-size: var(--text-sm);
+  color: var(--neutral-500);
+  margin: 0;
+  line-height: 1.7;
+}
+
+.cta-step-dimmed .cta-step-desc {
+  color: var(--neutral-400);
+}
+
+.btn-cta-copy {
+  margin-top: var(--sp-3);
+  padding: 14px 32px;
+  background: var(--primary-500);
+  color: #fff;
+  border: none;
+  border-radius: var(--radius-md);
+  font-size: var(--text-lg);
+  font-weight: var(--fw-semibold);
+  cursor: pointer;
+  transition: background 0.15s, transform 0.1s;
+  display: inline-flex;
+  align-items: center;
+  gap: var(--sp-2);
+}
+
+.btn-cta-copy:hover {
+  background: var(--primary-700);
+  transform: translateY(-1px);
+}
+
+.btn-cta-copy.btn-cta-copy-done {
+  background: var(--status-approve-accent);
+  cursor: default;
+  transform: none;
+}
+
+.cta-step-active .cta-step-number {
+  background: var(--status-approve-accent);
+}
+
+.cta-step-active .cta-step-title {
+  color: var(--neutral-900);
+}
+
+.cta-step-active .cta-step-desc {
+  color: var(--neutral-700);
+}
+
+.cta-divider {
+  height: 1px;
+  background: var(--neutral-200);
+  margin: var(--sp-2) 0;
+}

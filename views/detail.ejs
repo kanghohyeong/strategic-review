@@ -32,26 +32,7 @@
       <% } %>
 
       <% if (agentPrompt) { %>
-      <div class="detail-inner-section">
-        <div class="command-guide" id="command-guide">
-          <div class="command-guide-header">
-            <p class="command-guide-text">
-              <% if (file.status === 'init') { %>
-              To request a strategy review from the agent, copy the prompt below
-              <% } else { %>
-              To request a strategy revision from the agent, copy the prompt below
-              <% } %>
-            </p>
-            <div class="command-guide-actions">
-              <button class="btn-copy" onclick="copyCommand()">Copy</button>
-              <button class="btn-expand" id="prompt-toggle" onclick="togglePrompt()">펼치기</button>
-            </div>
-          </div>
-          <div class="command-snippet">
-            <pre id="cmd-text"><%= agentPrompt %></pre>
-          </div>
-        </div>
-      </div>
+      <pre id="cmd-text" style="display:none"><%= agentPrompt %></pre>
       <% } %>
 
       <div class="detail-inner-section">
@@ -64,7 +45,36 @@
       </div>
     </div>
 
+    <% if ((file.status === 'init' || file.status === 'revision') && !file.content && agentPrompt) { %>
+    <div class="cta-panel">
+      <div class="cta-step" id="cta-step-copy">
+        <div class="cta-step-number">1</div>
+        <div class="cta-step-content">
+          <p class="cta-step-title">에이전트 프롬프트 복사</p>
+          <p class="cta-step-desc">
+            <% if (file.status === 'init') { %>
+            아래 버튼을 클릭해 프롬프트를 복사하고, AI 에이전트에게 전달하면 보고서가 작성됩니다.
+            <% } else { %>
+            검토 의견이 반영된 수정 프롬프트를 복사하고, AI 에이전트에게 전달하면 보고서가 재작성됩니다.
+            <% } %>
+          </p>
+          <button class="btn-cta-copy" id="cta-copy-btn" onclick="ctaCopyCommand()">
+            에이전트 프롬프트 복사하기
+          </button>
+        </div>
+      </div>
+      <div class="cta-divider"></div>
+      <div class="cta-step cta-step-dimmed" id="cta-step-paste">
+        <div class="cta-step-number">2</div>
+        <div class="cta-step-content">
+          <p class="cta-step-title">에이전트에 붙여넣기</p>
+          <p class="cta-step-desc">복사한 프롬프트를 Claude, ChatGPT 등 AI 에이전트에 붙여넣으세요.<br>보고서가 자동으로 작성되어 이 화면에 반영됩니다.</p>
+        </div>
+      </div>
+    </div>
+    <% } else { %>
     <div class="markdown-body"><%- renderedContent %></div>
+    <% } %>
 
     <% if (file.status === 'submit') { %>
     <div class="review-bar" id="review-bar">
@@ -104,6 +114,26 @@
         const original = btn.textContent;
         btn.textContent = 'Copied!';
         setTimeout(function() { btn.textContent = original; }, 2000);
+      });
+    }
+
+    function ctaCopyCommand() {
+      const text = document.getElementById('cmd-text').textContent;
+      navigator.clipboard.writeText(text).then(function() {
+        const btn = document.getElementById('cta-copy-btn');
+        btn.textContent = '✓ 복사 완료!';
+        btn.classList.add('btn-cta-copy-done');
+
+        const step2 = document.getElementById('cta-step-paste');
+        step2.classList.remove('cta-step-dimmed');
+        step2.classList.add('cta-step-active');
+      }).catch(function() {
+        const guide = document.getElementById('command-guide');
+        if (guide) {
+          guide.classList.add('expanded');
+          const toggle = document.getElementById('prompt-toggle');
+          if (toggle) toggle.textContent = '접기';
+        }
       });
     }
 
