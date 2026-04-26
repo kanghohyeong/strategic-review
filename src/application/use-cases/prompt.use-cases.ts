@@ -4,13 +4,13 @@ import { PromptServicePort } from '../ports/inbound/prompt.service.port'
 import { PromptRepositoryPort } from '../ports/outbound/prompt.repository.port'
 
 export class PromptUseCases implements PromptServicePort {
-  constructor(private readonly promptRepository: PromptRepositoryPort) {}
+  constructor(private readonly promptRepository: PromptRepositoryPort) { }
 
   getInitPrompt(file: Report, baseUrl: string): string {
     const patchUrl = `${baseUrl}/api/reports/${file.filename}`
     return new Prompt(this.promptRepository.findTemplate('init')).render({
       objective: file.objective,
-      constraintsLine: file.constraints ? `제약사항: ${file.constraints}` : '',
+      constraintsLine: file.constraints || "없음",
       patchUrl,
     })
   }
@@ -25,6 +25,7 @@ export class PromptUseCases implements PromptServicePort {
     const lastRejectedContent = group.allFiles.find(f => f.status === 'reject')?.content ?? ''
     return new Prompt(this.promptRepository.findTemplate('revision')).render({
       objective: file.objective,
+      constraintsLine: file.constraints || "없음",
       reviewHistories,
       lastRejectedContent,
       patchUrl,

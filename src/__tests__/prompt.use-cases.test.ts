@@ -38,12 +38,12 @@ describe('PromptUseCases.getInitPrompt', () => {
     expect(prompt).toContain('| **1. Current Overview** |')
   })
 
-  it('제약사항이 없으면 제약사항 줄을 포함하지 않는다', () => {
+  it('제약사항이 없으면 제약사항 없음으로 반환한다', () => {
     const file = makeFile({ constraints: '' })
     const prompt = promptUseCases.getInitPrompt(file, baseUrl)
 
     expect(prompt).toContain('목표: 수익 극대화')
-    expect(prompt).not.toContain('제약사항:')
+    expect(prompt).toContain('제약사항: 없음')
     expect(prompt).toContain(`PATCH ${baseUrl}/api/reports/${file.filename}`)
     expect(prompt).toContain('| **1. Current Overview** |')
   })
