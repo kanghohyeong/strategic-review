@@ -4,6 +4,7 @@ import { SqliteRepository } from '../adapters/outbound/sqlite/sqlite.repository'
 import { ReportUseCases } from '../application/use-cases/report.use-cases'
 import { PromptUseCases } from '../application/use-cases/prompt.use-cases'
 import { createApp } from '../infrastructure/app'
+import { MarkdownPromptRepository } from '../adapters/outbound/markdown/markdown-prompt.repository'
 
 let app: ReturnType<typeof createApp> // express.Application
 let useCases: ReportUseCases
@@ -12,7 +13,7 @@ beforeEach(() => {
   initDb(':memory:')
   const repo = new SqliteRepository(getDb())
   useCases = new ReportUseCases(repo)
-  app = createApp(useCases, new PromptUseCases())
+  app = createApp(useCases, new PromptUseCases(new MarkdownPromptRepository()))
 })
 
 describe('GET /api/reports/:filename', () => {

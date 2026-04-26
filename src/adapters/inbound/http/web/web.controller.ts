@@ -70,7 +70,10 @@ export class WebController {
         ? String(await marked.parse(file.content))
         : '<p style="color:#888">No content available.</p>'
       const baseUrl = `${req.protocol}://${req.get('host')}`
-      const agentPrompt = this.promptService.getAgentPrompt(file, group, baseUrl)
+      const agentPrompt =
+        file.status === 'init' ? this.promptService.getInitPrompt(file, baseUrl)
+        : file.status === 'revision' ? this.promptService.getRevisionPrompt(file, group, baseUrl)
+        : ''
       res.render('detail', { file, group, renderedContent, strategicDir: this.reportService.getStrategicRelDir(), agentPrompt })
     } catch (err) {
       this.handleError(res, err)
@@ -89,7 +92,10 @@ export class WebController {
           ? String(await marked.parse(file.content))
           : '<p style="color:#888">No content available.</p>'
         const baseUrl = `${req.protocol}://${req.get('host')}`
-        const agentPrompt = this.promptService.getAgentPrompt(file, group, baseUrl)
+        const agentPrompt =
+          file.status === 'init' ? this.promptService.getInitPrompt(file, baseUrl)
+          : file.status === 'revision' ? this.promptService.getRevisionPrompt(file, group, baseUrl)
+          : ''
         res.render('detail', { file, group, renderedContent, strategicDir: this.reportService.getStrategicRelDir(), agentPrompt })
         return
       }
@@ -122,7 +128,10 @@ export class WebController {
           ? String(await marked.parse(file.content))
           : '<p style="color:#888">No content available.</p>'
         const baseUrl = `${req.protocol}://${req.get('host')}`
-        const agentPrompt = this.promptService.getAgentPrompt(file, group, baseUrl)
+        const agentPrompt =
+          file.status === 'init' ? this.promptService.getInitPrompt(file, baseUrl)
+          : file.status === 'revision' ? this.promptService.getRevisionPrompt(file, group, baseUrl)
+          : ''
         res.render('detail', { file, group, renderedContent, strategicDir: this.reportService.getStrategicRelDir(), agentPrompt })
         return
       }

@@ -10,6 +10,7 @@
     "dist",
     "views",
     "public",
+    "resources",
     "README.md"
   ],
   "engines": {
