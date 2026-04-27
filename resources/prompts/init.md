@@ -1,38 +1,40 @@
-# strategic-review
+# 전략 검토 보고서 작성
 
-Compares and analyzes multiple methodologies to reach a given goal and provides decision-making logic and rationale. Follow the instructions. Use API to save the report.
+여러 방법론을 비교·분석하여 목표 달성 방안을 도출하고, 의사결정 논리와 근거를 제공합니다. 아래 지침을 따라 보고서를 작성하고 API를 통해 저장하세요.
 
 
-## Instructions
+## 지침
 
-### Step 1: Define Objectives and Constraints
+### 1단계: 목표 및 제약사항 확인
 
 * 목표: #{objective}
 * 제약사항: #{constraintsLine}
 
-### Step 2: Data Research
+### 2단계: 자료 조사
 
-* Gather the necessary information required to draft the report.
+* 보고서 초안 작성에 필요한 정보를 수집하세요.
 
-### Step 3: Report Generation
+### 3단계: 보고서 작성
 
-* Draft the report ensuring it includes the following sections:
+* 아래 섹션을 포함하여 보고서를 작성하세요.
 
-| Section Name | Key Items | Writing Guide |
+| 섹션명 | 핵심 항목 | 작성 가이드 |
 | --- | --- | --- |
-| **1. Current Overview** | Background & Core Challenges | Describe the fundamental problem and current status using objective metrics. |
-| **2. Decision Criteria** | Evaluation Principles & Constraints | Specify criteria for evaluating alternatives (e.g., cost-effectiveness, speed, stability) and budget/technical limitations. |
-| **3. Multi-Alternative Analysis** | Scenario-based Options | Present at least 2–3 independent alternatives. Define the core value and operational mechanism of each. |
-| **4. Comparative Analysis Table** | Trade-offs | Contrast the pros/cons, budget, expected performance, and risks of each alternative for an at-a-glance comparison. |
-| **5. Practical Recommendation** | Review Opinion & Rationale | Recommend the most suitable option from a practical perspective, framed as **'opinion for decision support'** rather than a final conclusion. |
-| **6. Risk Management** | Potential Risks & Mitigation | Transparently disclose potential side effects of each choice and the management systems to control them. |
-| **7. Implementation Roadmap** | Step-by-Step Plan | Provide milestones and resource allocation plans for immediate execution of the chosen option. |
-| **8. Expected Effects & KPIs** | Performance Measurement & Definition of Done | Set objective data and quantitative indicators to prove the success of the decided plan. |
+| **1. 현황 개요** | 배경 및 핵심 과제 | 객관적 지표를 활용하여 근본 문제와 현황을 기술하세요. |
+| **2. 의사결정 기준** | 평가 원칙 및 제약사항 | 대안 평가 기준(예: 비용 효율, 속도, 안정성)과 예산·기술적 한계를 명시하세요. |
+| **3. 다중 대안 분석** | 시나리오 기반 옵션 | 독립적인 대안을 2~3개 이상 제시하고, 각 대안의 핵심 가치와 운영 메커니즘을 정의하세요. |
+| **4. 비교 분석 테이블** | 트레이드오프 | 각 대안의 장단점, 예산, 예상 성과, 리스크를 한눈에 비교하세요. |
+| **5. 실무 권고안** | 검토 의견 및 근거 | 실무적 관점에서 가장 적합한 옵션을 추천하되, 최종 결론이 아닌 **'의사결정 지원 의견'** 형태로 기술하세요. |
+| **6. 리스크 관리** | 잠재적 리스크 및 완화 방안 | 각 선택의 잠재적 부작용과 이를 통제할 관리 체계를 투명하게 공개하세요. |
+| **7. 실행 로드맵** | 단계별 계획 | 선택한 옵션을 즉시 실행하기 위한 마일스톤과 자원 배분 계획을 제시하세요. |
+| **8. 기대 효과 및 KPI** | 성과 측정 및 완료 정의 | 결정된 계획의 성공을 증명할 객관적 데이터와 정량적 지표를 설정하세요. |
 
-### Step 4: Reporting
+### 4단계: 보고서 저장
 
-* Organize the report in Markdown format and save it.
-* 저장 방법:
-PATCH #{patchUrl}
-Content-Type: text/markdown
-Body: (작성한 보고서 전문)
+* 보고서를 마크다운 형식으로 정리하고, 아래 curl 명령어를 실행하여 저장하세요.
+
+```bash
+curl -X PATCH #{patchUrl} \
+  -H "Content-Type: text/markdown" \
+  --data-binary "(작성한 보고서 전문)"
+```

@@ -35,7 +35,7 @@ describe('PromptUseCases.getInitPrompt', () => {
     expect(prompt).toContain('목표: 수익 극대화')
     expect(prompt).toContain('제약사항: 예산 1억')
     expect(prompt).toContain(`PATCH ${baseUrl}/api/reports/${file.filename}`)
-    expect(prompt).toContain('| **1. Current Overview** |')
+    expect(prompt).toContain('| **1. 현황 개요** |')
   })
 
   it('제약사항이 없으면 제약사항 없음으로 반환한다', () => {
@@ -45,7 +45,7 @@ describe('PromptUseCases.getInitPrompt', () => {
     expect(prompt).toContain('목표: 수익 극대화')
     expect(prompt).toContain('제약사항: 없음')
     expect(prompt).toContain(`PATCH ${baseUrl}/api/reports/${file.filename}`)
-    expect(prompt).toContain('| **1. Current Overview** |')
+    expect(prompt).toContain('| **1. 현황 개요** |')
   })
 })
 
@@ -70,10 +70,10 @@ describe('PromptUseCases.getRevisionPrompt', () => {
 
     expect(prompt).toContain('[v1 검토 의견]')
     expect(prompt).toContain('논리 보완 필요')
-    expect(prompt).toContain('# 이전 보고서 내용')
+    expect(prompt).toContain(`${baseUrl}/api/reports/20240101_120000.v1.md`)
     expect(prompt).toContain('목표: 수익 극대화')
     expect(prompt).toContain(`PATCH ${baseUrl}/api/reports/${revisionFile.filename}`)
-    expect(prompt).toContain('| **1. Current Overview** |')
+    expect(prompt).toContain('| **1. 현황 개요** |')
   })
 
   it('여러 버전의 검토 의견이 모두 누적된다', () => {
@@ -87,7 +87,7 @@ describe('PromptUseCases.getRevisionPrompt', () => {
     expect(prompt).toContain('1차 피드백')
     expect(prompt).toContain('[v2 검토 의견]')
     expect(prompt).toContain('2차 피드백')
-    expect(prompt).toContain('v2 내용')
-    expect(prompt).not.toContain('v1 내용')
+    expect(prompt).toContain(`${baseUrl}/api/reports/20240101_120000.v2.md`)
+    expect(prompt).not.toContain(`${baseUrl}/api/reports/20240101_120000.v1.md`)
   })
 })

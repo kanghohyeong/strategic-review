@@ -22,12 +22,13 @@ export class PromptUseCases implements PromptServicePort {
       .reverse()
       .map(f => `[v${f.version} 검토 의견]\n${f.reviewComment}`)
       .join('\n\n')
-    const lastRejectedContent = group.allFiles.find(f => f.status === 'reject')?.content ?? ''
+    const lastRejectedFile = group.allFiles.find(f => f.status === 'reject')
+    const lastRejectedGetUrl = `${baseUrl}/api/reports/${lastRejectedFile?.filename ?? ''}`
     return new Prompt(this.promptRepository.findTemplate('revision')).render({
       objective: file.objective,
       constraintsLine: file.constraints || "없음",
       reviewHistories,
-      lastRejectedContent,
+      lastRejectedGetUrl,
       patchUrl,
     })
   }
