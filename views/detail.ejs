@@ -75,6 +75,16 @@
         </div>
       </div>
     </div>
+    <script>
+    (function() {
+      var es = new EventSource('/api/reports/<%= file.filename %>/events');
+      es.addEventListener('message', function() {
+        es.close();
+        location.reload();
+      });
+      window.addEventListener('beforeunload', function() { es.close(); });
+    })();
+    </script>
     <% } else { %>
     <div class="markdown-body-wrapper">
       <% if (file.content) { %>
