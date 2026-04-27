@@ -1,66 +1,80 @@
-# Strategic Review Skill
+# Strategic Review
 
-> Also available in: [한국어](./README.ko.md)
+> **코드 리뷰 하지말고, 구현 전략 리뷰 하세요**
 
-This skill compares and analyzes multiple methodologies to achieve a given goal, and provides decision-making logic and rationale.
+AI와 협력하여 구현 전략 문서를 작성하고, 코드 작성 전에 팀이 검토·승인하는 워크플로우 도구입니다.
 
-## Problem
+---
 
-- The most fundamental workflow when using Claude Code is **[plan → review → accept]**.
-- In the **plan** phase, the agent *implicitly* determines a single optimal solution and produces a detailed step-by-step plan to execute it.
-- This is highly effective for moving quickly into execution, but it rests on the optimistic assumption that the agent can always find the optimal solution.
-- Finding the optimal solution requires all variables to be provided upfront, which forces the user to supply detailed requirements and sufficient context.
-- Yet, as quoted from *The Pragmatic Programmer*: *"An exact specification of almost anything is almost impossible."*
-- This workflow also traps users in a maze of memory files and rule documents, causing serious context pollution.
-- The user's role becomes narrowly defined as *"precisely describing what needs to be done"*, and the agent's role as *"precisely executing what was described"* — reducing a vastly knowledgeable and creative agent to a mere fast executor, productive only up to the limit of the user's own knowledge.
+## 왜 필요한가요?
 
-## Solution
+에이전틱 코딩 시대는 새로운 역설을 만들어냈습니다.
 
-- Before the **plan** phase, a **strategic-review** step is introduced: it compares and analyzes multiple methodologies for achieving the requirements, and provides information to help the user make informed decisions.
-- Instead of arbitrarily deciding on a single optimal solution, the agent proposes multiple scenarios — each with technical trade-offs, expected risks, and implementation difficulty — for the user to choose from.
-- Users are freed from the burden of defining complex specifications and detailed rules upfront. By *selecting* and *giving feedback on* the best path from the agent's proposed options, the vast context of the real world and the agent's limited context naturally synchronize.
-- The agent functions not merely as an *execution tool*, but as a *smart collaborator*. Leveraging its extensive knowledge, it can suggest alternatives or cutting-edge approaches the user may not have considered, extending the quality of outcomes beyond the user's own level of knowledge.
-- The *implicitly* decided approach is now surfaced as an *explicit* comparative document. Users can see the logical rationale for why a method was chosen, and by locking in the direction before moving to the plan phase, the likelihood of rework is reduced.
+Claude Code, Cursor 같은 AI 에이전트는 수백 줄의 코드를 몇 분 만에 작성합니다. 문제는 **속도가 아니라 방향**입니다. 전략이 틀렸다면 틀린 코드가 기계 속도로 쌓입니다.
 
-## What It Provides
+코드 리뷰는 이미 너무 늦습니다. 구현이 끝난 코드를 리뷰하는 것은 방향을 바꾸는 일이 아니라 기정사실을 정당화하는 과정에 가깝습니다. AI가 생성한 방대한 코드는 리뷰 비용을 기하급수적으로 높입니다.
 
-- Provides the `strategic-review` skill, which delivers a **Strategic Review Report** in the following format:
+**구현 전 전략 리뷰가 진짜 레버리지입니다.** 구현 전 5분의 전략 검토가 구현 후 5시간의 리팩토링을 막습니다.
 
-| Section Name | Key Items | Writing Guide |
-| --- | --- | --- |
-| **1. Current Overview** | Background & Core Challenges | Describe the fundamental problem and current status using objective metrics. |
-| **2. Decision Criteria** | Evaluation Principles & Constraints | Specify criteria for evaluating alternatives (e.g., cost-effectiveness, speed, stability) and budget/technical limitations. |
-| **3. Multi-Alternative Analysis** | Scenario-based Options | Present at least 2–3 independent alternatives. Define the core value and operational mechanism of each. |
-| **4. Comparative Analysis Table** | Trade-offs | Contrast the pros/cons, budget, expected performance, and risks of each alternative for an at-a-glance comparison. |
-| **5. Practical Recommendation** | Review Opinion & Rationale | Recommend the most suitable option from a practical perspective, framed as **'opinion for decision support'** rather than a final conclusion. |
-| **6. Risk Management** | Potential Risks & Mitigation | Transparently disclose potential side effects of each choice and the management systems to control them. |
-| **7. Implementation Roadmap** | Step-by-Step Plan | Provide milestones and resource allocation plans for immediate execution of the chosen option. |
-| **8. Expected Effects & KPIs** | Performance Measurement & Definition of Done | Set objective data and quantitative indicators to prove the success of the decided plan. |
+Strategic Review는 이 과정을 자동화합니다. AI가 전략 초안을 작성하고, 팀은 타당성 판단에만 집중합니다.
 
-- Also provides a **browser interface** and the `strategic-review-interactive` skill for effective integration between the interface and the agent. Recommended for users who want to introduce a systematic decision-making document management tool.
+---
 
-## Installation
+## 어떻게 동작하나요?
 
-### Only Skill (Required)
-```bash
-npx skills add https://github.com/kanghohyeong/strategic-review-skill --skill strategic-review
+```
+1. 기능 이름 · 목표 · 제약사항 입력
+         ↓
+2. AI 프롬프트 자동 생성
+         ↓
+3. Claude / ChatGPT에 프롬프트 붙여넣기
+         ↓
+4. AI가 전략 문서 작성 → 서버에 자동 저장 → 브라우저 자동 새로고침
+         ↓
+5. 팀원 검토
+    ├── 승인  → 구현 시작
+    └── 거절 + 피드백 → AI가 피드백 반영하여 재작성
 ```
 
-### Browser Interface (Optional)
-```bash
-# Install the interface integration skill
-npx skills add https://github.com/kanghohyeong/strategic-review-skill --skill strategic-review-interactive
-```
+거절 시 검토 의견이 다음 AI 프롬프트에 자동으로 포함되어 피드백 루프가 완성됩니다.
+
+---
+
+## 시작하기
 
 ```bash
-# Run the browser interface
-npx -y strategic-review-webui -- --port 3131
+npx strategic-review-webui
 ```
-Running the browser interface command starts a server on localhost, where you can conduct strategic reviews via a GUI.
 
-## Guide
+포트를 지정하려면:
 
-- **Do not use it as a replacement for `plan`.** The plan phase remains powerful once the direction has been solidified.
-  - Existing workflow: `plan → review → accept`
-  - Extended workflow: `strategic-review → plan → review → accept`
-- While always using it may not be necessary considering token efficiency or task speed, it is strongly recommended to actively use it from the perspective of expanding your thinking — even when you feel the direction is already clear!
+```bash
+npx strategic-review-webui --port 3000
+```
+
+브라우저에서 `http://localhost:3000` 을 여세요.
+
+**요구사항**: Node.js 18+
+
+---
+
+## 전략 문서 구성
+
+AI가 작성하는 전략 문서는 8개 섹션으로 구성됩니다.
+
+| # | 섹션 | 내용 |
+|---|------|------|
+| 1 | 현황 개요 | 현재 상태 및 배경 |
+| 2 | 의사결정 기준 | 평가 기준 및 가중치 |
+| 3 | 다중 대안 분석 | 선택 가능한 구현 방식들 |
+| 4 | 비교 분석 테이블 | 대안별 장단점 비교 |
+| 5 | 실무 권고안 | 최종 권장 방향 |
+| 6 | 리스크 관리 | 예상 위험 및 대응 방안 |
+| 7 | 실행 로드맵 | 단계별 실행 계획 |
+| 8 | 기대 효과 및 KPI | 성공 지표 |
+
+---
+
+## License
+
+MIT
