@@ -43,13 +43,13 @@ Strategic Review는 이 과정을 자동화합니다. AI가 전략 초안을 작
 ## 시작하기
 
 ```bash
-npx strategic-review-webui
+npx strategic-review
 ```
 
 포트를 지정하려면:
 
 ```bash
-npx strategic-review-webui --port 3000
+npx strategic-review --port 3000
 ```
 
 브라우저에서 `http://localhost:3000` 을 여세요.

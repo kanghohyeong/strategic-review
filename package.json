@@ -1,10 +1,20 @@
 {
-  "name": "strategic-review-webui",
-  "version": "1.1.0",
+  "name": "strategic-review",
+  "version": "1.0.0",
   "description": "Strategic Review Interactive Web Server",
+  "author": "kanghohyeong <hobro.kang@gmail.com>",
+  "license": "MIT",
+  "repository": {
+    "type": "git",
+    "url": "https://github.com/kanghohyeong/strategic-review.git"
+  },
+  "homepage": "https://github.com/kanghohyeong/strategic-review#readme",
+  "bugs": {
+    "url": "https://github.com/kanghohyeong/strategic-review/issues"
+  },
   "main": "dist/index.js",
   "bin": {
-    "strategic-review-webui": "dist/cli.js"
+    "strategic-review": "dist/cli.js"
   },
   "files": [
     "dist",
